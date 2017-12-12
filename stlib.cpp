@@ -18,7 +18,7 @@ struct node_t* newNode(int name){
   node->root = node;
   node->level = 0;
   node->cluster = NULL;
-
+  node->size = 0;
   return node;
 };
 
@@ -50,9 +50,18 @@ void updateTree(graph_t* graph, int u, int v){
       //put into adj list
       graph->tree->list[graph->tree->size].nodes = node;
 
+      //update children
+      node->children = (struct adjTreeList_t*) malloc(2* sizeof(adjTreeList_t));
+      node->children[0].nodes = graph->tree->list[u].nodes->root;
+      node->children[1].nodes = graph->tree->list[v].nodes->root;
+      node->children->nodes->size = 2;
+
       //update parent
       graph->tree->list[u].nodes->root->parent = node;
       graph->tree->list[v].nodes->root->parent = node;
+
+      //update height
+      node->height = graph->tree->list[u].nodes->root->height + 1;
 
       //update root
       graph->tree->list[u].nodes->root = node;
@@ -65,6 +74,8 @@ void updateTree(graph_t* graph, int u, int v){
 
       //update tree size
       graph->tree->size = graph->tree->size + 1;
+
+      printf("Children of %d are %d and %d\n", node->name, node->children[0].nodes->name, node->children[1].nodes->name);
     }
     else if(rootu->leaf == 1 && rootv->leaf == 0){
       printf("\nRoot of %d is a leaf\n", u);
@@ -108,9 +119,9 @@ void updateTree(graph_t* graph, int u, int v){
 
       int i;
       //Update levels
-      for(i = 0; i<graph->tree->size){
-        
-      }
+      //for(i = 0; i<graph->tree->size){
+
+      //}
 
       }
 

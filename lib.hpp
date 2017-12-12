@@ -29,23 +29,21 @@ struct graph_t {
 // structural tree representation
 // every node has a parent
 struct node_t {
-  int                  name    ;
-  char                 key     ;
-  struct node_t*       parent  ;
-  int                  level   ;
-  int                  leaf    ;
-  struct node_t*       root    ;
-  struct localTree_t*  cluster ;
+  int                   name    ;
+  struct node_t*        parent  ;
+  int                   level   ;
+  int                   leaf    ;
+  struct node_t*        root    ;
+  struct localTree_t*   cluster ;
+  int                   height  ;
+  struct adjTreeList_t* children;
+  int                   size    ;
 } ;
 
 // adj list for nodes
 struct adjTreeList_t {
   struct node_t*  nodes   ;
 } ;
-
-struct node* root = 0;
-
-
 
 // the structural tree representation
 struct structTree_t {
