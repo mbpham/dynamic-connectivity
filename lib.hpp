@@ -51,9 +51,6 @@ struct structTree_t {
   struct adjTreeList_t* list     ;
 } ;
 
-
-
-
 /* --------- LOCAL TREE ---------*/
 // binary local tree representation
 struct localTree_t {
@@ -71,6 +68,13 @@ struct graph_t* makeGraph(int size);
 
 // bulding structural tree
 struct structTree_t* initStructTree(graph_t* graph);
+
+//updates levels in structural tree
+void updateLevel(graph_t* graph, node_t* currentRoot, int u, int v, int Case, int height, int level, int rootnum);
+
+//updates children for root
+void updateChildren(graph_t* graph, node_t* currentRoot, int u, int v, int Case);
+
 
 // building local tree
 void makeLocalTree(structTree_t structTree);
@@ -92,3 +96,5 @@ void merge();
 void search();
 
 int isConnected(int u, int v);
+
+void updateLT(node_t* node);

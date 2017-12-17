@@ -30,11 +30,6 @@ struct graph_t* makeGraph(int size){
   }
   structTree_t* a;
   graph->tree = initStructTree(graph);
-
-  //printing roots of all trees
-  for(i = 0;i<size;i++){
-  printf("%d\n", graph->tree->list[i].nodes->root->name);
-  }
   return graph;
 }
 
@@ -62,43 +57,6 @@ void addEdge(graph_t* graph, int u, int v){
 void deleteEdge(graph_t graph, int v, int u){
 
 }
-
-
-/* --------- LOCAL TREE ---------*/
-// building local tree
-void makeLocalTree(){
-
-};
-
-
-// Insert
-void insert(int u, int v){
-  int connected = isConnected(u, v);
-  if (not connected){
-  //   Insert the edge (u,v)
-  }
-};
-
-// Delete
-
-// replace
-void replace(graph_t graph){
-
-};
-
-// merging nodes when running edge delete
-void merge(){
-
-};
-
-// search for connection
-void search(){
-
-};
-
-int isConnected(int u, int v) {
-  return 0;
-};
 
 
 /* --------- PRINTS ---------*/
