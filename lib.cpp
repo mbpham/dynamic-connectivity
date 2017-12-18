@@ -35,27 +35,60 @@ struct graph_t* makeGraph(int size){
 
 // add edge, make connection between two vertex'
 void addEdge(graph_t* graph, int u, int v){
-  int i;
-  // connection from u to v
-  // making a pointer to a new vertex
-  struct vertex_t* newVertex = makeAdjList(v);
-  // makes v point to u
-  newVertex->next = graph->graphArr[u].vertex;
-  // makes the new vertex the head of the adj. list
-  graph->graphArr[u].vertex = newVertex;
+  /* CHANGE: check if there is an direct connection and
+             not just any connection */
+  if(isConnected(graph, u, v) == 0){
+    int i;
+    // connection from u to v
+    // making a pointer to a new vertex
+    struct vertex_t* newVertex = makeAdjList(v);
+    // makes v point to u
+    newVertex->next = graph->graphArr[u].vertex;
+    // makes the new vertex the head of the adj. list
+    graph->graphArr[u].vertex = newVertex;
 
-  // connection from v to u
-  newVertex = makeAdjList(u);
-  newVertex->next = graph->graphArr[v].vertex;
-  graph->graphArr[v].vertex = newVertex;
+    // connection from v to u
+    newVertex = makeAdjList(u);
+    newVertex->next = graph->graphArr[v].vertex;
+    graph->graphArr[v].vertex = newVertex;
 
-  //Updates structural tree
-  updateTree(graph, u, v);
+    //Updates structural tree
+    updateTree(graph, u, v);
+
+    //update tree bitmap at level i
+  }
+  else{
+    //update nontree bitmap at level i
+
+  }
+
 }
 
 // delete an edge
-void deleteEdge(graph_t graph, int v, int u){
+void deleteEdge(graph_t* graph, int v, int u){
+  if(isConnected(graph, u, v)){
+    vertex_t* nexts = graph->graphArr[u].vertex;
+    printf("1\n");
+    while(nexts) {
+      printf("2\n");
+      if(nexts->name == v){
+        printf("4\n");
+        if((nexts->next) == NULL){
+          printf("5\n");
+          nexts = NULL;
+        }
+        else{
+          printf("3\n");
+          nexts->next = nexts->next->next;
+        }
 
+      }
+      nexts = nexts->next;
+    }
+
+    graph->graphArr[u].vertex->next = graph->graphArr[u].vertex->next->next;
+    //graph->graphArr[v].vertex->next = graph->graphArr[v].vertex->next->next;
+  }
 }
 
 
@@ -74,5 +107,3 @@ void prettyPrinting(graph_t* graph) {
     }
   }
 }
-
-// Printing cluster connections

@@ -10,15 +10,14 @@ using namespace std;
 //struct structTree_t* initStructTree(graph_t* graph){
 //};
 
-
 struct node_t* newNode(int name){
   struct node_t* node = (struct node_t*) malloc(sizeof(node_t));
   node->name = name;
   node->parent = NULL;
   node->root = node;
   node->level = 0;
-  node->cluster = NULL;
   node->size = 0;
+  node->n = 1;
   return node;
 };
 
@@ -32,7 +31,12 @@ struct structTree_t* initStructTree(graph_t* graph){
     structTree->list[i].nodes = newNode(i);
     structTree->list[i].nodes->leaf = 1;
     structTree->list[i].nodes->root = structTree->list[i].nodes;
+
+    //init local tree
+    structTree->list[i].nodes->localTree = initLocalTree(graph, structTree->list[i].nodes);
   }
+
+
   structTree->size = graph->size;
   return structTree;
 };
@@ -50,6 +54,10 @@ void updateTree(graph_t* graph, int u, int v){
       node_t* node = newNode(graph->tree->size);
       //put into adj list
       graph->tree->list[graph->tree->size].nodes = node;
+
+      //updates the subtree size
+      node->n = node->n + 2;
+      node->rank = ceil(log2(node->n));
 
       //update children
       updateChildren(graph, node, u, v, 0);
@@ -71,13 +79,15 @@ void updateTree(graph_t* graph, int u, int v){
       //update tree size
       graph->tree->size = graph->tree->size + 1;
 
-      //printf("Children of %d are %d and %d\n", node->name,
-      //node->children[0].nodes->name, node->children[1].nodes->name);
     }
     else if(rootu->leaf == 1 && rootv->leaf == 0){
       //printf("\nRoot of %d is a leaf\n", u);
       //update children
       updateChildren(graph, graph->tree->list[v].nodes->root, u, v, 1);
+
+      //Update subtree size
+      graph->tree->list[v].nodes->root->n = rootv->n + 1;
+      graph->tree->list[v].nodes->root->rank = ceil(log2(graph->tree->list[v].nodes->root->n));
 
       //update parent
       graph->tree->list[u].nodes->root->parent = rootv;
@@ -97,6 +107,11 @@ void updateTree(graph_t* graph, int u, int v){
     }
     else if(rootu->leaf == 0 && rootv->leaf == 1){
       printf("\nRoot of %d is a leaf\n", v);
+
+
+      graph->tree->list[u].nodes->root->n = rootu->n + 1;
+      graph->tree->list[u].nodes->root->rank = ceil(log2(graph->tree->list[u].nodes->root->n));
+
 
       //updates children
       updateChildren(graph, graph->tree->list[u].nodes->root, v, u, 1);
@@ -120,6 +135,9 @@ void updateTree(graph_t* graph, int u, int v){
       printf("\nNone are leaves\n");
       node_t* node = newNode(graph->tree->size);
 
+      node->n = rootu->n + rootv->n;
+      node->rank = ceil(log2(node->n));
+
       //update children
       updateChildren(graph, node , u, v, 0);
       graph->tree->list[graph->tree->size].nodes = node;
@@ -141,6 +159,13 @@ void updateTree(graph_t* graph, int u, int v){
       }
 
     }
+  else{
+    printf("\n%d and %d share the same root\n", u, v);
+  }
+  //update tree bitmap at level i
+
+  printf("size of subtree is now: %d\n",graph->tree->list[v].nodes->root->n);
+  printf("size of rank is now: %d\n",graph->tree->list[v].nodes->root->rank);
   }
 
 /* --------- UPDATES ---------*/
@@ -151,7 +176,7 @@ void updateLevel(graph_t* graph, node_t* currentRoot, int u, int v, int Case,
     graph->tree->list[u].nodes->level = 1;
     graph->tree->list[v].nodes->level = 1;
     currentRoot->level = 0;
-}
+  }
   else if(Case == 1 && height > -1){
       int i;
       int size = currentRoot->size;
@@ -165,7 +190,6 @@ void updateLevel(graph_t* graph, node_t* currentRoot, int u, int v, int Case,
       }
     }
   }
-
 } ;
 
 void updateChildren(graph_t* graph, node_t* currentRoot, int u, int v, int Case){
@@ -193,3 +217,12 @@ void updateChildren(graph_t* graph, node_t* currentRoot, int u, int v, int Case)
     graph->tree->list[u].nodes->root;
   }
 } ;
+
+int isConnected(graph_t* graph, int u, int v) {
+  node_t* rootu = graph->tree->list[u].nodes->root;
+  node_t* rootv = graph->tree->list[v].nodes->root;
+  if(rootu == rootv){
+    return 1;
+  }
+  else return 0;
+};

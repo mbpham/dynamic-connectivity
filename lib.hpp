@@ -29,15 +29,17 @@ struct graph_t {
 // structural tree representation
 // every node has a parent
 struct node_t {
-  int                   name    ;
-  struct node_t*        parent  ;
-  int                   level   ;
-  int                   leaf    ;
-  struct node_t*        root    ;
-  struct localTree_t*   cluster ;
-  int                   height  ;
-  struct adjTreeList_t* children;
-  int                   size    ;
+  int                   name      ;
+  struct node_t*        parent    ;
+  int                   level     ;
+  int                   leaf      ;
+  struct node_t*        root      ;
+  struct localTree_t*   localTree ;
+  int                   height    ;
+  struct adjTreeList_t* children  ;
+  int                   size      ;
+  int                   n         ;
+  int                   rank      ;
 } ;
 
 // adj list for nodes
@@ -53,9 +55,21 @@ struct structTree_t {
 
 /* --------- LOCAL TREE ---------*/
 // binary local tree representation
-struct localTree_t {
 
+struct localNode_t {
+  int            name    ;
+  int            tree    ;
+  int            nonTree ;
 } ;
+
+struct adjLTList_t {
+  struct localNode_t*   node  ;
+} ;
+
+struct localTree_t {
+  struct adjLTList_t*   list  ;
+} ;
+
 
 /* --------- FUNCTIONS ---------*/
 // building adj list for connections
@@ -69,22 +83,26 @@ struct graph_t* makeGraph(int size);
 // bulding structural tree
 struct structTree_t* initStructTree(graph_t* graph);
 
+// initializes local tree
+struct localTree_t* initLocalTree(graph_t* graph, node_t* node);
+
+struct localNode_t* newLocalNode(int name);
+
 //updates levels in structural tree
 void updateLevel(graph_t* graph, node_t* currentRoot, int u, int v, int Case, int height, int level, int rootnum);
 
 //updates children for root
 void updateChildren(graph_t* graph, node_t* currentRoot, int u, int v, int Case);
 
-
 // building local tree
-void makeLocalTree(structTree_t structTree);
+void makeLocalTree(structTree_t* structTree);
 
 void addEdge(graph_t graph, int u, int v);
 
 void updateTree(graph_t* graph, int u, int v);
 
 // delete an edge and update
-void deleteEdge(graph_t graph, vertex_t v, vertex_t u);
+void deleteEdge(graph_t* graph, vertex_t v, vertex_t u);
 
 // replace
 void replace(graph_t graph);
@@ -95,6 +113,6 @@ void merge();
 // search for connection
 void search();
 
-int isConnected(int u, int v);
+int isConnected(graph_t* graph, int u, int v);
 
-void updateLT(node_t* node);
+void updateLT(structTree_t* structTree, node_t* node);
