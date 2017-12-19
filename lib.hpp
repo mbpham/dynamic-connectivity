@@ -37,7 +37,7 @@ struct node_t {
   struct localTree_t*   localTree ;
   int                   height    ;
   struct adjTreeList_t* children  ;
-  int                   size      ;
+  int                   size      ; //num of children
   int                   n         ;
   int                   rank      ;
 } ;
@@ -57,9 +57,15 @@ struct structTree_t {
 // binary local tree representation
 
 struct localNode_t {
-  int            name    ;
-  int            tree    ;
-  int            nonTree ;
+  int                   name      ;
+  int                   tree      ;
+  int                   nonTree   ;
+  int                   pNode     ;
+  struct localNode_t*   left      ;
+  struct localNode_t*   right     ;
+  struct localNode_t*   parent    ;
+  int                   size      ;
+  int                   rank      ;
 } ;
 
 struct adjLTList_t {
@@ -67,6 +73,7 @@ struct adjLTList_t {
 } ;
 
 struct localTree_t {
+  int                   size  ;
   struct adjLTList_t*   list  ;
 } ;
 
@@ -95,7 +102,7 @@ void updateLevel(graph_t* graph, node_t* currentRoot, int u, int v, int Case, in
 void updateChildren(graph_t* graph, node_t* currentRoot, int u, int v, int Case);
 
 // building local tree
-void makeLocalTree(structTree_t* structTree);
+struct localTree_t* makeLT(structTree_t* structTree, node_t* localRoot);
 
 void addEdge(graph_t graph, int u, int v);
 

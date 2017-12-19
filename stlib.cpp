@@ -18,6 +18,7 @@ struct node_t* newNode(int name){
   node->level = 0;
   node->size = 0;
   node->n = 1;
+  node->rank = 0;
   return node;
 };
 
@@ -33,9 +34,8 @@ struct structTree_t* initStructTree(graph_t* graph){
     structTree->list[i].nodes->root = structTree->list[i].nodes;
 
     //init local tree
-    structTree->list[i].nodes->localTree = initLocalTree(graph, structTree->list[i].nodes);
-  }
-
+    //structTree->list[i].nodes->localTree = initLocalTree(graph, structTree->list[i].nodes);
+    }
 
   structTree->size = graph->size;
   return structTree;
@@ -77,11 +77,14 @@ void updateTree(graph_t* graph, int u, int v){
       updateLevel(graph, node, u, v, 0, 0, 0, node->name);
 
       //update tree size
-      graph->tree->size = graph->tree->size + 1;
+      graph->tree->size++;
+
+      //make local tree for new node
+      //graph->tree->list[v].nodes->root->localTree = makeLT(graph->tree,   graph->tree->list[v].nodes->root);
 
     }
     else if(rootu->leaf == 1 && rootv->leaf == 0){
-      //printf("\nRoot of %d is a leaf\n", u);
+      printf("\nRoot of %d is a leaf\n", u);
       //update children
       updateChildren(graph, graph->tree->list[v].nodes->root, u, v, 1);
 
@@ -96,40 +99,18 @@ void updateTree(graph_t* graph, int u, int v){
       graph->tree->list[u].nodes->root = rootv;
 
       //update children size for root
-      (graph->tree->list[v].nodes->root->size) = rootv->size + 1;
+      (graph->tree->list[v].nodes->root->size) = rootv->size+1;
 
       //update level
       updateLevel(graph, (graph->tree->list[v].nodes->root), u, v, 1,
                   graph->tree->list[v].nodes->root->height, 0, rootv->name);
 
       //update local tree
+    //  printf("%d's amount of children %d\n", v, graph->tree->list[v].nodes->size);
 
     }
     else if(rootu->leaf == 0 && rootv->leaf == 1){
-      printf("\nRoot of %d is a leaf\n", v);
-
-
-      graph->tree->list[u].nodes->root->n = rootu->n + 1;
-      graph->tree->list[u].nodes->root->rank = ceil(log2(graph->tree->list[u].nodes->root->n));
-
-
-      //updates children
-      updateChildren(graph, graph->tree->list[u].nodes->root, v, u, 1);
-
-      //update parent
-      graph->tree->list[v].nodes->root->parent = rootu;
-
-      //update root
-      graph->tree->list[v].nodes->root = rootu;
-
-      //update children size for root
-      (graph->tree->list[v].nodes->root->size) = rootu->size + 1;
-
-      //update level
-      updateLevel(graph, (graph->tree->list[u].nodes->root), u, v, 1,
-                  graph->tree->list[v].nodes->root->height, 0, rootu->name);
-
-      //update local tree
+      updateTree(graph, v, u);
     }
     else if(rootu->leaf == 0 && rootv->leaf == 0){
       printf("\nNone are leaves\n");
@@ -153,8 +134,11 @@ void updateTree(graph_t* graph, int u, int v){
 
 
       //update tree size
-      graph->tree->size = graph->tree->size + 1;
+      graph->tree->size++;
+      graph->tree->list[v].nodes->root->n++;
       //printf("\nNEW Root of %d: %d\nNEW Root of %d: %d\n", u, graph->tree->list[u].nodes->root->name, v, graph->tree->list[u].nodes->root->name );
+      //graph->tree->list[v].nodes->root->localTree = makeLT(graph->tree, graph->tree->list[v].nodes->root);
+
 
       }
 
@@ -164,14 +148,15 @@ void updateTree(graph_t* graph, int u, int v){
   }
   //update tree bitmap at level i
 
-  printf("size of subtree is now: %d\n",graph->tree->list[v].nodes->root->n);
-  printf("size of rank is now: %d\n",graph->tree->list[v].nodes->root->rank);
+  //printf("size of subtree is now: %d\n",graph->tree->list[v].nodes->root->n);
+  //printf("size of rank is now: %d\n",graph->tree->list[v].nodes->root->rank);
   }
 
 /* --------- UPDATES ---------*/
 
 void updateLevel(graph_t* graph, node_t* currentRoot, int u, int v, int Case,
                   int height, int level, int rootnum){
+  //printf("Current root is %d\n", currentRoot->name);
   if(Case == 0){
     graph->tree->list[u].nodes->level = 1;
     graph->tree->list[v].nodes->level = 1;
@@ -179,8 +164,10 @@ void updateLevel(graph_t* graph, node_t* currentRoot, int u, int v, int Case,
   }
   else if(Case == 1 && height > -1){
       int i;
+      //problem here
       int size = currentRoot->size;
       currentRoot->root = graph->tree->list[rootnum].nodes;
+
       //runs over num of children
       currentRoot->level = level;
       if(height>0) {
@@ -202,20 +189,22 @@ void updateChildren(graph_t* graph, node_t* currentRoot, int u, int v, int Case)
   }
   else if(Case == 1){
     int childSize;
-    childSize = (graph->tree->list[v].nodes->root->size);
-
+    //printf("Update Child: current root is %d\n", currentRoot->name);
+    childSize = (currentRoot->size);
+    //printf("Update Child: amount of children for %d is %d\n", graph->tree->list[v].nodes->name, graph->tree->list[v].nodes->size);
     //reallocate memory to children and update children
-    struct adjTreeList_t* ptr = graph->tree->list[v].nodes->root->children;
+    struct adjTreeList_t* ptr = currentRoot->children;
 
     //reallocate memory
     graph->tree->list[v].nodes->root->children = (struct adjTreeList_t*)
-    realloc(ptr, (childSize+1 * sizeof(adjTreeList_t)));
-    graph->tree->list[v].nodes->root->children->nodes->size = childSize;
+    realloc(ptr, (childSize+2 * sizeof(adjTreeList_t)));
+    currentRoot->size = childSize;
 
     //update children
     graph->tree->list[v].nodes->root->children[childSize].nodes =
     graph->tree->list[u].nodes->root;
   }
+  //printf("Update Child: amount of children for %d is %d\n", graph->tree->list[v].nodes->name, graph->tree->list[v].nodes->size);
 } ;
 
 int isConnected(graph_t* graph, int u, int v) {
@@ -226,3 +215,18 @@ int isConnected(graph_t* graph, int u, int v) {
   }
   else return 0;
 };
+
+void printClusters(struct node_t* node){
+  int i;
+  int size = node->height;
+  for (i = 0; i<size; i++){
+    struct node_t* child = node->children[i].nodes;
+    while(child){
+      if(child->leaf == 1){
+        printf("%d, ", child->name);
+
+      }
+      child = child->children->nodes;
+    }
+  }
+}

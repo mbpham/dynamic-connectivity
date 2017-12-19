@@ -37,29 +37,32 @@ struct graph_t* makeGraph(int size){
 void addEdge(graph_t* graph, int u, int v){
   /* CHANGE: check if there is an direct connection and
              not just any connection */
-  if(isConnected(graph, u, v) == 0){
-    int i;
-    // connection from u to v
-    // making a pointer to a new vertex
-    struct vertex_t* newVertex = makeAdjList(v);
-    // makes v point to u
-    newVertex->next = graph->graphArr[u].vertex;
-    // makes the new vertex the head of the adj. list
-    graph->graphArr[u].vertex = newVertex;
+  printf("\nInserting edge (%d, %d)\n", u, v);         
+  if(1) {
+    if(isConnected(graph, u, v) == 0){
+      int i;
+      // connection from u to v
+      // making a pointer to a new vertex
+      struct vertex_t* newVertex = makeAdjList(v);
+      // makes v point to u
+      newVertex->next = graph->graphArr[u].vertex;
+      // makes the new vertex the head of the adj. list
+      graph->graphArr[u].vertex = newVertex;
 
-    // connection from v to u
-    newVertex = makeAdjList(u);
-    newVertex->next = graph->graphArr[v].vertex;
-    graph->graphArr[v].vertex = newVertex;
+      // connection from v to u
+      newVertex = makeAdjList(u);
+      newVertex->next = graph->graphArr[v].vertex;
+      graph->graphArr[v].vertex = newVertex;
 
-    //Updates structural tree
-    updateTree(graph, u, v);
+      //Updates structural tree
+      updateTree(graph, u, v);
 
-    //update tree bitmap at level i
-  }
-  else{
-    //update nontree bitmap at level i
+      //update tree bitmap at level i
+    }
+    else{
+      //update nontree bitmap at level i
 
+    }
   }
 
 }
