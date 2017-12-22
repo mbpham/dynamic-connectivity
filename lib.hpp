@@ -36,10 +36,12 @@ struct node_t {
   struct node_t*        root      ;
   struct localTree_t*   localTree ;
   int                   height    ;
-  struct adjTreeList_t* children  ;
+  struct node_t*        children  ;
   int                   size      ; //num of children
   int                   n         ;
   int                   rank      ;
+  struct node_t*        sibling   ;
+  struct node_t*        last      ;
 } ;
 
 // adj list for nodes
@@ -82,6 +84,9 @@ struct localTree_t {
 // building adj list for connections
 struct vertex_t* makeAdjList(int v);
 
+//update level and root for structural tree
+void recurseLevel(node_t* root, node_t* currentRoot, int level);
+
 struct node_t* newNode(int name);
 
 // building the graph
@@ -91,18 +96,16 @@ struct graph_t* makeGraph(int size);
 struct structTree_t* initStructTree(graph_t* graph);
 
 // initializes local tree
-struct localTree_t* initLocalTree(graph_t* graph, node_t* node);
+struct localTree_t* initLocalTree(node_t* node);
 
 struct localNode_t* newLocalNode(int name);
-
-//updates levels in structural tree
-void updateLevel(graph_t* graph, node_t* currentRoot, int u, int v, int Case, int height, int level, int rootnum);
 
 //updates children for root
 void updateChildren(graph_t* graph, node_t* currentRoot, int u, int v, int Case);
 
 // building local tree
-struct localTree_t* makeLT(structTree_t* structTree, node_t* localRoot);
+//struct localTree_t* makeLT(node_t* localRoot);
+void mergeNodes(node_t* a, node_t* b);
 
 void addEdge(graph_t graph, int u, int v);
 
@@ -119,7 +122,8 @@ void merge();
 
 // search for connection
 void search();
+void Clusters(struct node_t* node);
 
 int isConnected(graph_t* graph, int u, int v);
 
-void updateLT(structTree_t* structTree, node_t* node);
+void updateLT(node_t* node);

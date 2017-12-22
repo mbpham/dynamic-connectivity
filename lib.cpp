@@ -37,9 +37,9 @@ struct graph_t* makeGraph(int size){
 void addEdge(graph_t* graph, int u, int v){
   /* CHANGE: check if there is an direct connection and
              not just any connection */
-  printf("\nInserting edge (%d, %d)\n", u, v);         
-  if(1) {
-    if(isConnected(graph, u, v) == 0){
+  printf("\nInserting edge (%d, %d)\n", u, v);
+
+    if(1){
       int i;
       // connection from u to v
       // making a pointer to a new vertex
@@ -62,11 +62,11 @@ void addEdge(graph_t* graph, int u, int v){
     else{
       //update nontree bitmap at level i
 
+
     }
-  }
 
 }
-
+/*
 // delete an edge
 void deleteEdge(graph_t* graph, int v, int u){
   if(isConnected(graph, u, v)){
@@ -93,7 +93,7 @@ void deleteEdge(graph_t* graph, int v, int u){
     //graph->graphArr[v].vertex->next = graph->graphArr[v].vertex->next->next;
   }
 }
-
+*/
 
 /* --------- PRINTS ---------*/
 // Printing vertex connections
