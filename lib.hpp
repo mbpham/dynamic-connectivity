@@ -69,6 +69,7 @@ struct localNode_t {
   struct localNode_t*   parent    ;
   int                   size      ;
   int                   rank      ;
+  struct localNode_t*   root      ;
 
 } ;
 
@@ -81,6 +82,7 @@ struct localTree_t {
   struct adjLTList_t*   list  ;
   int                   build ;
   struct localNode_t*   root  ;
+  int                   roots ;
 } ;
 
 
@@ -133,3 +135,5 @@ int isConnected(graph_t* graph, int u, int v);
 void updateLT(localTree_t* tree, node_t* node);
 
 struct localTree_t* makeLT(node_t* localRoot);
+
+void pairNodes(localTree_t* tree, node_t* node, localNode_t* arr[]);
