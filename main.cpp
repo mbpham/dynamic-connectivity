@@ -5,10 +5,11 @@ using namespace std;
 int main(int argc, char** argv)
   {
     graph_t* a;
-    a = makeGraph(500);
+    a = makeGraph(10);
     addEdge(a,1,2);
     addEdge(a,4,3);
     addEdge(a,5,3);
+    addEdge(a,1,2);
     addEdge(a,1,4);
     //addEdge(a,6,31);
     //addEdge(a,6,30);

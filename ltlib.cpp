@@ -16,8 +16,6 @@ int comp(const void *p, const void *q)
     return (l->rank - r->rank);
     }
 
-
-
 struct localNode_t* newLocalNode(int name){
   struct localNode_t* newNode = (struct localNode_t*) malloc(sizeof(struct localNode_t));
   newNode->name = name;
@@ -30,9 +28,11 @@ struct localTree_t* initLocalTree(node_t* node){
   localTree_t* localTree = (struct localTree_t*) malloc(sizeof(struct localTree_t));
   localTree->list = (struct adjLTList_t*) malloc(sizeof(struct adjLTList_t));
   localTree->list[0].node = newLocalNode(node->name);
+  node->localTree = localTree;
+  localTree->root = localTree->list[0].node;
+  localTree->size = 1;
   return localTree;
 } ;
-
 
 void tree(localNode_t* a){
 
@@ -42,45 +42,76 @@ void nonTree(localNode_t* a){
 
 } ;
 
-void updateLT(node_t* localRoot){
+//makes a new local tree for new parent nodes in structural tree
+struct localTree_t* makeLT(node_t* localRoot){
+  localNode_t* newRoot = newLocalNode(0);
   localTree_t* localTree = (struct localTree_t*) malloc(sizeof(struct localTree_t));
-  localTree->list = (struct adjLTList_t*) malloc(2*localRoot->n * sizeof(struct adjLTList_t));
+  localTree->list = (struct adjLTList_t*) malloc(sizeof(struct adjLTList_t));
+  localTree->root = newRoot;
+  localTree->list[0].node = localTree->root;
 
-  localTree->size = localRoot->size+1;
+  int i = 1;
+
+  node_t* child = localRoot->children;
+  while(child){
+    localNode_t* elem = newLocalNode(child->name);
+    elem->rank = child->rank;
+    localTree->list[i].node = elem;
+    printf("%d\n", localTree->list[i].node->rank);
+    i++;
+    child = child->sibling;
+  }
+
+
+  return localTree;
+}
+
+//updates local tree when mergin two non-leaves
+void updateLT(localTree_t* tree, node_t* localRoot){
+  tree->list = (struct adjLTList_t*) malloc(localRoot->n * sizeof(struct adjLTList_t));
+
+  tree->size = localRoot->size+1;
 
   //prepare local root for local tree array
   node_t* child = localRoot->children;
-  localNode_t* root = newLocalNode(localRoot->name);
-  root->rank = localRoot->rank;
-  root->parent = NULL;
-  localTree->list[0].node = root;
   int j = 1;
-
 
   //make new nodes for local tree
   while(child){
     localNode_t* elem = newLocalNode(child->name);
     //elem->rank = child->rank;
-    elem->rank = j;
+    elem->rank = child->rank;
     //printf("%d\n", child->rank);
-    localTree->list[j].node = elem;
+    tree->list[j].node = elem;
     j++;
     child = child->sibling;
   }
 
 
-  adjLTList_t* sortedList = localTree->list;
-  printf("hhh %d\n", sortedList[1].node->name);
-  //arr = localRoot->children;
-  qsort(sortedList, sizeof(sortedList)/sizeof(*sortedList), sizeof(*sortedList), comp);
+  qsort(tree, sizeof(tree->list)/sizeof(*tree->list), sizeof(*tree->list), comp);
+
   int i;
-  int size = localRoot->size;
-  //printf("Size %d\n", localRoot->size);
+  int size = (localRoot->size)+1;
+  printf("Size %d\n", localRoot->size);
 
   //pair nodes from sorted list with the same rank r
-  for(i = 0; i<localRoot->size+1;i++){
-    printf("%d have rank %d\n", sortedList[i].node->name, sortedList[i].node->rank);
-    //if i and i+1 are not equal, then set i-1
+  for(i = 1; i<size;i++){
+    printf("s\n");
+    //printf("%d have rank %d %d\n", tree->list[i].node->name, tree->list[i].node->rank,tree->list[i-1].node->rank);
+
+    //pairing
+    if(tree->list[i].node->rank == tree->list[i-1].node->rank){
+      printf("\nPairing nodes %d and %d\n", tree->list[i].node->name, tree->list[i-1].node->name);
+
+      //making a parent node for matching ranks
+      localNode_t* newNode = newLocalNode(localRoot->size+1);
+      newNode->rank = tree->list[i].node->rank + 1;
+
+      (localRoot->size)++;
+      i++;
+      tree->build = 0;
+      printf("Rank of new node %d\n", newNode->rank);
+    }
 
     //otherwise pair the nodes by making a new parent node with rank r+1
   }
@@ -91,14 +122,13 @@ void updateLT(node_t* localRoot){
 };
 
 
+// merging local roots by deleting rank paths and do the same procedure as in updateLT
+void merge(localNode_t* u, localNode_t* v){
+  //remove rank path and v
 
-// replace
-void replace(graph_t graph){
+  //sort the nodes by rank
 
-};
-
-// merging nodes when running edge delete
-void merge(){
+  //pair by ranks
 
 };
 

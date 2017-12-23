@@ -42,6 +42,7 @@ struct node_t {
   int                   rank      ;
   struct node_t*        sibling   ;
   struct node_t*        last      ;
+  struct localNode_t*   localRoot ;
 } ;
 
 // adj list for nodes
@@ -68,6 +69,7 @@ struct localNode_t {
   struct localNode_t*   parent    ;
   int                   size      ;
   int                   rank      ;
+
 } ;
 
 struct adjLTList_t {
@@ -77,6 +79,8 @@ struct adjLTList_t {
 struct localTree_t {
   int                   size  ;
   struct adjLTList_t*   list  ;
+  int                   build ;
+  struct localNode_t*   root  ;
 } ;
 
 
@@ -126,4 +130,6 @@ void Clusters(struct node_t* node);
 
 int isConnected(graph_t* graph, int u, int v);
 
-void updateLT(node_t* node);
+void updateLT(localTree_t* tree, node_t* node);
+
+struct localTree_t* makeLT(node_t* localRoot);

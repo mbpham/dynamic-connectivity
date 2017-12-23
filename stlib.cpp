@@ -34,9 +34,8 @@ struct structTree_t* initStructTree(graph_t* graph){
     structTree->list[i].nodes->root = structTree->list[i].nodes;
 
     //init local tree
-    //structTree->list[i].nodes->localTree = initLocalTree(graph, structTree->list[i].nodes);
-
-    }
+    structTree->list[i].nodes->localTree = initLocalTree(structTree->list[i].nodes);
+      }
 
   structTree->size = graph->size;
   return structTree;
@@ -46,7 +45,7 @@ struct structTree_t* initStructTree(graph_t* graph){
 void updateTree(graph_t* graph, int u, int v){
   node_t* rootu = graph->tree->list[u].nodes->root;
   node_t* rootv = graph->tree->list[v].nodes->root;
-  if(rootu->name != rootv->name){
+  if(rootu != rootv){
     if(rootu->leaf == 1 && rootv->leaf == 1){
       printf("Both %d and %d are leaves\n", rootu->name, rootv->name);
 
@@ -86,6 +85,7 @@ void updateTree(graph_t* graph, int u, int v){
       //make local tree for new node
       //graph->tree->list[v].nodes->root->localTree = makeLT(graph->tree,   graph->tree->list[v].nodes->root);
 
+      graph->tree->list[u].nodes->root->localTree = makeLT(graph->tree->list[u].nodes->root);
     }
     else if(rootu->leaf == 1 && rootv->leaf == 0){
       printf("\nRoot of %d is a leaf\n", u);
@@ -97,10 +97,11 @@ void updateTree(graph_t* graph, int u, int v){
       rootv->children->last->sibling = graph->tree->list[u].nodes;
       rootv->children->last = graph->tree->list[u].nodes;
       graph->tree->list[u].nodes->sibling = NULL;
-      recurseLevel(rootv, rootv, 0);
 
-      //update parent
-      graph->tree->list[u].nodes->root->parent = rootv;
+      graph->tree->list[u].nodes->root = graph->tree->list[v].nodes->root;
+      graph->tree->list[u].nodes->parent = graph->tree->list[v].nodes->root;
+
+      recurseLevel(rootv, rootv, 0);
 
       //update children size for root
       (graph->tree->list[v].nodes->root->size) = rootv->size+1;
@@ -114,43 +115,22 @@ void updateTree(graph_t* graph, int u, int v){
       printf("None are leaves\n");
 
       mergeNodes(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
-    /*  node_t* node = newNode(graph->tree->size);
-      //put into adj list
-      graph->tree->list[graph->tree->size].nodes = node;
-      graph->tree->list[graph->tree->size].nodes->sibling = NULL;
-      graph->tree->list[graph->tree->size].nodes->children = rootu;
-
-      //rank and descending leaves
-      graph->tree->list[graph->tree->size].nodes->n = rootu->n + rootv->n;
-      graph->tree->list[graph->tree->size].nodes->rank = ceil(log2(node->n));
-
-      //update siblings
-      graph->tree->list[u].nodes->root->sibling = graph->tree->list[v].nodes->root;
-      graph->tree->list[u].nodes->root->last = graph->tree->list[v].nodes->root;
-
-      graph->tree->list[u].nodes->root->parent = graph->tree->list[graph->tree->size].nodes;
-      graph->tree->list[v].nodes->root->parent = graph->tree->list[graph->tree->size].nodes;
-
-      //update height of local root
-      graph->tree->list[graph->tree->size].nodes->height = max(rootu->height, rootv->height) + 1;
-
-      //update tree size
-      graph->tree->size++;
-*/
       recurseLevel(graph->tree->list[u].nodes->root->parent, graph->tree->list[u].nodes->root->parent, 0);
-      updateLT(graph->tree->list[u].nodes->root);
+
       }
     }
   else{
     printf("\n%d and %d share the same root\n", u, v);
   }
   //update tree bitmap at level i
-  printf("n is now: %d\n",graph->tree->list[u].nodes->root->n);
-  printf("rank is now: %d\n",graph->tree->list[u].nodes->root->rank);
+  //updateLT(graph->tree->list[u].nodes->localTree, graph->tree->list[u].nodes->root);
+
+  //printf("n is now: %d\n",graph->tree->list[u].nodes->root->n);
+  //printf("rank is now: %d\n",graph->tree->list[u].nodes->root->rank);
 
   //update LT here
 
-  }
+} ;
 
 /* --------- UPDATES ---------*/
 
