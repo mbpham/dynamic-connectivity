@@ -118,22 +118,17 @@ void updateTree(graph_t* graph, int u, int v){
       printf("None are leaves\n");
 
       mergeNodes(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
-
+      mergeLT(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
       recurseLevel(graph->tree->list[u].nodes->root->parent, graph->tree->list[u].nodes->root->parent, 0);
-
-      updateLT(graph->tree->list[u].nodes->root->localTree, graph->tree->list[u].nodes->root);
+      //updateLT(graph->tree->list[u].nodes->root->localTree, graph->tree->list[u].nodes->root);
       }
     }
   else{
     printf("\n%d and %d share the same root\n", u, v);
+    //Update nontree bitmap
   }
   //update tree bitmap at level i
   //updateLT(graph->tree->list[u].nodes->localTree, graph->tree->list[u].nodes->root);
-
-  //printf("n is now: %d\n",graph->tree->list[u].nodes->root->n);
-  //printf("rank is now: %d\n",graph->tree->list[u].nodes->root->rank);
-
-  //update LT here
 
 } ;
 

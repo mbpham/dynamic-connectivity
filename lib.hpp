@@ -123,8 +123,8 @@ void deleteEdge(graph_t* graph, vertex_t v, vertex_t u);
 // replace
 void replace(graph_t graph);
 
-// merging vertex'
-void merge();
+// merging nodes in LT
+void mergeLT(node_t* u, node_t* v);
 
 // search for connection
 void search();
