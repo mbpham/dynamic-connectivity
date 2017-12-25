@@ -87,10 +87,13 @@ void updateTree(graph_t* graph, int u, int v){
 
       graph->tree->list[u].nodes->root->localTree = makeLT(graph->tree->list[u].nodes->root);
 
+
     }
     else if(rootu->leaf == 1 && rootv->leaf == 0){
       printf("\nRoot of %d is a leaf\n", u);
 
+
+      mergeLT(graph->tree->list[v].nodes->root, graph->tree->list[u].nodes->root);
       //Update subtree size
       graph->tree->list[v].nodes->root->n = rootv->n + 1;
       graph->tree->list[v].nodes->root->rank = ceil(log2(graph->tree->list[v].nodes->root->n));
@@ -110,7 +113,7 @@ void updateTree(graph_t* graph, int u, int v){
 
       //update local tree
       //updateLT(graph->tree->list[v].nodes->root->localTree, graph->tree->list[v].nodes->root);
-      mergeLT(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
+
     }
     else if(rootu->leaf == 0 && rootv->leaf == 1){
       updateTree(graph, v, u);
