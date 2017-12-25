@@ -9,6 +9,5 @@ int main(int argc, char** argv)
     addEdge(a,1,2);
     addEdge(a,4,3);
     addEdge(a,1,4);
-    addEdge(a,2,3);
 
   }

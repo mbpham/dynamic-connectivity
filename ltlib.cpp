@@ -67,6 +67,7 @@ struct localTree_t* makeLT(node_t* localRoot){
     localTree->list[2].node->root = newRoot;
     newRoot->right = newParent;
     localTree->list[localRoot->size+1].node = newParent;
+    localTree->size = 3;
   }
 
   else{
@@ -79,8 +80,68 @@ struct localTree_t* makeLT(node_t* localRoot){
 //updates local tree when adding nodes
 void updateLT(localTree_t* tree, node_t* localRoot){
 
+  //tree->size = localRoot->size+1;
+  tree->roots = tree->size-1;
+  int size = tree->roots;
+
+  struct localNode_t* arr[size];
+  int k;
+  for(k = 0; k<size; k++){
+      printf("sss %d with rank %d\n", tree->list[k+1].node->name, tree->list[k+1].node->rank);
+      arr[k] = tree->list[k+1].node;
+  }
+
+  //sorting array by rank
+  qsort(arr, size, sizeof(localNode_t*), comp);
+  tree->build = 0;
+
+  //paring nodes
+  while (tree->build == 0) {
+    tree->build = 1;
+    printf("size is %d\n", size);
+    pairNodes(tree, localRoot, arr);
+    localNode_t* newArray[tree->roots];
+    //printf("%d\n", tree->build);
+    int i;
+    int j = 0;
+
+    for(i=0;i<size;i++){
+      if(arr[i]->pNode == 1){
+        arr[j] = arr[i];
+        j++;
+      }
+    }
+    size = tree->roots;
+    printf("size is %d\n", size);
+  }
+
+  localNode_t* rankPath[size];
+
+  //make rank path here using pointers from arr
+  for(k = 0; k<size; k++){
+    localNode_t* newPnode = newLocalNode(-1);
+    newPnode->left = arr[k];
+    rankPath[k] = newPnode;
+    printf("New node is %d\n", rankPath[k]->name);
+    if(k<0){
+      rankPath[k-1]->right = rankPath[k];
+      rankPath[k]->parent = rankPath[k-1];
+    }
+    if(k==0){
+      rankPath[k]->parent = tree->list[0].node;
+      tree->list[0].node->right = rankPath[k];
+    }
+    if(k==size-3){
+    }
+  }
+
+
+};
+
+void updateSTLT(localTree_t* tree, node_t* localRoot){
+
   tree->size = localRoot->size+1;
-  tree->roots = localRoot->size;
+  tree->roots = tree->size;
   int size = tree->roots;
 
   //prepare local root for local tree array
@@ -90,16 +151,17 @@ void updateLT(localTree_t* tree, node_t* localRoot){
   //make new nodes for local tree
   while(child){
     localNode_t* elem = newLocalNode(child->name);
-    //elem->rank = child->rank;
     elem->rank = child->rank;
-    //printf("%d\n", child->rank);
+    elem->rank = child->rank;
+    printf("%d\n", child->rank);
     tree->list[j].node = elem;
     j++;
     child = child->sibling;
   }
-  struct localNode_t* arr[localRoot->size];
+  struct localNode_t* arr[size];
   int k;
   for(k = 0; k<size; k++){
+    // printf("%d\n", tree->list[k+1].node->name);
       arr[k] = tree->list[k+1].node;
   }
 
@@ -129,7 +191,7 @@ void updateLT(localTree_t* tree, node_t* localRoot){
 
   //make rank path here using pointers from arr
   for(k = 0; k<size; k++){
-    localNode_t* newPnode = newLocalNode(k);
+    localNode_t* newPnode = newLocalNode(-1);
     newPnode->left = arr[k];
     rankPath[k] = newPnode;
     printf("New node is %d\n", rankPath[k]->name);
@@ -145,13 +207,15 @@ void updateLT(localTree_t* tree, node_t* localRoot){
 
     }
   }
+  printf("%d\n", tree->list[0].node->right->left->name);
 
 };
 
 void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
   int i;
-  int size = tree->roots+1;
+  int size = tree->roots;
   tree->roots = 0;
+  //printf("size is %d\n", size);
   //pair nodes from sorted list with the same rank r
   for(i = 1; i<size;i++){
     //rintf("current node is %d with rank %d\n", arr[i]->name, arr[i]->rank);
@@ -164,6 +228,7 @@ void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
       newParent->pNode = 1;
       arr[i]->pNode = 0;
       arr[i-1]->pNode = 0;
+      //printf("i'th elem %d\n", arr[i]->name);
 
       //update parents and children
       newParent->left = arr[i];
@@ -177,9 +242,11 @@ void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
       //remove the children from array and keep parent
       arr[i] = newParent;
       (localRoot->size)++;
+      printf("New node is %d\n", arr[i]->name);
       i++;
-      if(size > 4){
+      if(size > 2){
         tree->build = 0;
+        printf("Not ready\n");
       }
     }
     else{
@@ -188,6 +255,29 @@ void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
   }
 } ;
 
+// merging local roots by deleting rank paths and do the same procedure as in updateLT
+void mergeLT(node_t* u, node_t* v){
+  printf("Merging roots %d and %d\n", u->name, v->name);
+  int i;
+
+  //Deleting rank path and putting
+  for(i = 0; i<v->size+2; i++){
+    if(v->localTree->list[i].node->name != -1){
+      if(v->localTree->list[i].node->name != v->name){
+        //printf("Putting %d into u list\n", v->localTree->list[i].node->name);
+        u->localTree->list[u->size-1] = v->localTree->list[i];
+        u->size++;
+        u->localTree->size++;
+
+      }
+    }
+  }
+
+  printf("%d, %d, %d, %d, %d\n", u->localTree->list[0].node->name, u->localTree->list[1].node->name,u->localTree->list[2].node->name, u->localTree->list[3].node->name, u->localTree->list[4].node->name);
+  updateLT(u->localTree, u);
+
+};
+
 void tree(localNode_t* a){
   //update tree bitmap
 } ;
@@ -195,20 +285,6 @@ void tree(localNode_t* a){
 void nonTree(localNode_t* a){
   //update nontree bitmap
 } ;
-
-// merging local roots by deleting rank paths and do the same procedure as in updateLT
-void mergeLT(node_t* u, node_t* v){
-  printf("Merging roots %d and %d\n", u->name, v->name);
-  int i;
-  int j = 0;
-  int k = 0;
-  for(i = 0; i<v->size+1; i++){
-    printf("u is %d\n", u->localTree->list[i].node->name);
-    printf("v is %d\n", v->localTree->list[i].node->name);
-    if(v->localTree->list[i].node->name != -1)
-  }
-
-};
 
 // search for connection
 void search(){
