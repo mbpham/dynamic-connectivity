@@ -37,6 +37,7 @@ struct graph_t* makeGraph(int size){
 void addEdge(graph_t* graph, int u, int v){
   /* CHANGE: check if there is an direct connection and
              not just any connection */
+  printf("\n---------------------------------------------\n");
   printf("\nInserting edge (%d, %d)\n", u, v);
 
     if(1){

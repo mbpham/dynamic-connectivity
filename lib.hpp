@@ -67,9 +67,10 @@ struct localNode_t {
   struct localNode_t*   left      ;
   struct localNode_t*   right     ;
   struct localNode_t*   parent    ;
-  int                   size      ;
+  int                   size      ; //defines the number of nodes
   int                   rank      ;
   struct localNode_t*   root      ;
+  int                   newNode   ;
 
 } ;
 
@@ -78,11 +79,12 @@ struct adjLTList_t {
 } ;
 
 struct localTree_t {
-  int                   size  ;
+  int                   size  ; //defines the amount of nodes in total without path nodes
   struct adjLTList_t*   list  ;
   int                   build ;
   struct localNode_t*   root  ;
-  int                   roots ;
+  int                   roots ; //defines the number og nodes that are directly connected to the rank path
+  int                   pNodes;
 } ;
 
 
