@@ -42,7 +42,7 @@ struct structTree_t* initStructTree(graph_t* graph){
 };
 
 //updates structural tree after edge insertion
-void updateTree(graph_t* graph, int u, int v){
+void addTree(graph_t* graph, int u, int v){
   node_t* rootu = graph->tree->list[u].nodes->root;
   node_t* rootv = graph->tree->list[v].nodes->root;
   if(rootu != rootv){
@@ -116,7 +116,7 @@ void updateTree(graph_t* graph, int u, int v){
 
     }
     else if(rootu->leaf == 0 && rootv->leaf == 1){
-      updateTree(graph, v, u);
+      addTree(graph, v, u);
     }
     else if(rootu->leaf == 0 && rootv->leaf == 0){
       printf("None are leaves\n");
@@ -135,6 +135,21 @@ void updateTree(graph_t* graph, int u, int v){
   //updateLT(graph->tree->list[u].nodes->localTree, graph->tree->list[u].nodes->root);
 
 } ;
+
+void delTree(graph_t* graph, int u, int v){
+  //find the first common local root
+  node_t* minLevelNode;
+  int high = min(graph->tree->list[u].nodes->level, graph->tree->list[v].nodes->level);
+  if (graph->tree->list[u].nodes->level == high){
+    printf("Level of %d is %d\n", graph->tree->list[u].nodes->name, high);
+    minLevelNode = graph->tree->list[u].nodes;
+  }
+  else if (graph->tree->list[v].nodes->level == high){
+    printf("Level of %d is %d\n", graph->tree->list[v].nodes->name, high);
+    minLevelNode = graph->tree->list[v].nodes;
+  }
+
+}
 
 /* --------- UPDATES ---------*/
 

@@ -232,8 +232,6 @@ void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
   tree->roots = 0;
   //pair nodes from sorted list with the same rank r
   for(i = size-1; i>0;i--){
-    //printf("index is %d\n", i);
-    //printf("%d\n", arr[i-1]->name);
     printf("PairNodes: Trying to pair %d with rank %d and %d with rank %d\n", arr[i-1]->name, arr[i-1]->rank, arr[i]->name, arr[i]->rank);
     if(((arr[i]->parent->name == -1)&&(arr[i-1]->parent->name == -1))) {
       if(arr[i]->rank == arr[i-1]->rank){
@@ -275,7 +273,6 @@ void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
         }
 
         if(i == 1){
-          printf("%d\n", i);
           printf("PairNodes: The last node in arr is %d with rank %d and is changed to a pnode \n", arr[i-1]->name, arr[i-1]->rank);
           tree->roots++;
           arr[i-1]->pNode = 1;

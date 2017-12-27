@@ -88,51 +88,50 @@ struct localTree_t {
 } ;
 
 
-/* --------- FUNCTIONS ---------*/
-// building adj list for connections
-struct vertex_t* makeAdjList(int v);
+/* ------------------ FUNCTIONS ------------------*/
 
-//update level and root for structural tree
-void recurseLevel(node_t* root, node_t* currentRoot, int level);
-
-struct node_t* newNode(int name);
-
+/* --------- GRAPH ---------*/
 // building the graph
 struct graph_t* makeGraph(int size);
+// building adj list for connections
+struct vertex_t* makeAdjList(int v);
+void addEdge(graph_t graph, int u, int v);
+// delete an edge and update
+void deleteEdge(graph_t* graph, vertex_t v, vertex_t u);
 
+void searchEdge(graph_t* graph, vertex_t* vertex, int u, int v);
+
+/* --------- STRUCTURAL TREE ---------*/
+struct node_t* newNode(int name);
+//update level and root for structural tree
+void recurseLevel(node_t* root, node_t* currentRoot, int level);
 // bulding structural tree
 struct structTree_t* initStructTree(graph_t* graph);
 
+void mergeNodes(node_t* a, node_t* b);
+
+void addTree(graph_t* graph, int u, int v);
+
+void delTree(graph_t* graph, int u, int v);
+
+// replace
+void replace(graph_t graph);
+
+void Clusters(struct node_t* node);
+
+int isConnected(graph_t* graph, int u, int v);
+
+/* --------- LOCAL TREE ---------*/
 // initializes local tree
 struct localTree_t* initLocalTree(node_t* node);
 
 struct localNode_t* newLocalNode(int name);
-
-//updates children for root
-void updateChildren(graph_t* graph, node_t* currentRoot, int u, int v, int Case);
-
-// building local tree
-//struct localTree_t* makeLT(node_t* localRoot);
-void mergeNodes(node_t* a, node_t* b);
-
-void addEdge(graph_t graph, int u, int v);
-
-void updateTree(graph_t* graph, int u, int v);
-
-// delete an edge and update
-void deleteEdge(graph_t* graph, vertex_t v, vertex_t u);
-
-// replace
-void replace(graph_t graph);
 
 // merging nodes in LT
 void mergeLT(node_t* u, node_t* v);
 
 // search for connection
 void search();
-void Clusters(struct node_t* node);
-
-int isConnected(graph_t* graph, int u, int v);
 
 void updateLT(localTree_t* tree, node_t* node);
 
