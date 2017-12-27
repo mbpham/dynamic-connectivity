@@ -159,15 +159,44 @@ void delTree(graph_t* graph, int u, int v){
   node_t* minLevelNode;
   int high = min(graph->tree->list[u].nodes->level, graph->tree->list[v].nodes->level);
   if (graph->tree->list[u].nodes->level == high){
-    printf("Level of %d is %d\n", graph->tree->list[u].nodes->name, high);
+    //printf("Level of %d is %d\n", graph->tree->list[u].nodes->name, high);
     minLevelNode = graph->tree->list[u].nodes;
   }
   else if (graph->tree->list[v].nodes->level == high){
-    printf("Level of %d is %d\n", graph->tree->list[v].nodes->name, high);
+    //printf("Level of %d is %d\n", graph->tree->list[v].nodes->name, high);
     minLevelNode = graph->tree->list[v].nodes;
   }
-  
 
+  minLevelNode = minLevelNode->parent;
+  while(1){
+    if(search(minLevelNode->cluster, u) == 1 && search(minLevelNode->cluster, v) == 1){
+      printf("delTree: Matching node found: %d at level %d\n", minLevelNode->name, minLevelNode->level);
+      break;
+    }
+    minLevelNode = minLevelNode->parent;
+  }
+
+  //increase level by 1
+  //look at children of minLevelNode
+
+
+  //Look for a replacement edge 
+
+
+}
+
+int search(adjTreeList_t* cluster, int elem){
+  int size = cluster->size;
+  int i = 0;
+  while (i < size && elem != cluster[i].nodes->name) {
+      i++;
+  }
+  if(i < size){
+    return 1;
+  }
+  else{
+    return 0;
+  }
 }
 
 /* --------- UPDATES ---------*/
@@ -195,6 +224,7 @@ void Clusters(struct node_t* node){
 }
 
 void mergeNodes(node_t* a, node_t* b){
+  printf("mergeNodes: Merging %d and %d in %d\n", a->name, b->name, a->name);
   struct node_t* child = b->children;
   //Updates children
   a->children->last->sibling = b->children;

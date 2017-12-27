@@ -121,6 +121,8 @@ void Clusters(struct node_t* node);
 
 int isConnected(graph_t* graph, int u, int v);
 
+int search(adjTreeList_t* cluster, int elem);
+
 /* --------- LOCAL TREE ---------*/
 // initializes local tree
 struct localTree_t* initLocalTree(node_t* node);
@@ -133,7 +135,6 @@ struct localTree_t* makeLT(node_t* localRoot);
 void mergeLT(node_t* u, node_t* v);
 
 // search for connection
-void search();
 
 void updateLT(localTree_t* tree, node_t* node);
 

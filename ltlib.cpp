@@ -328,6 +328,3 @@ void nonTree(localNode_t* a){
 } ;
 
 // search for connection
-void search(){
-  //searching for a new edge
-};
