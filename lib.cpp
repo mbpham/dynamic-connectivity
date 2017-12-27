@@ -66,7 +66,7 @@ void deleteEdge(graph_t* graph, int u, int v){
   searchEdge(graph, headu, u, v);
   //deleting u from v adj list
   searchEdge(graph, headv, v, u);
-  delTree(graph, u, v);
+  //delTree(graph, u, v);
 
 }
 

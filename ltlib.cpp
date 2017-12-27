@@ -39,12 +39,14 @@ struct localTree_t* initLocalTree(node_t* node){
 struct localTree_t* makeLT(node_t* localRoot){
   printf("Name of local root is %d\n", localRoot->name);
   localNode_t* newRoot = newLocalNode(localRoot->name);
+
   newRoot->rank = localRoot->rank;
   localTree_t* localTree = (struct localTree_t*) malloc(sizeof(struct localTree_t));
   localTree->list = (struct adjLTList_t*) malloc(11*sizeof(struct adjLTList_t));
   localTree->root = newRoot;
   localTree->list[0].node = localTree->root;
   localTree->roots = localRoot->size;
+
 
   int i = 1;
   node_t* child = localRoot->children;

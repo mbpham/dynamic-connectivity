@@ -19,6 +19,8 @@ struct node_t* newNode(int name){
   node->size = 0;
   node->n = 0;
   node->rank = 0;
+  //CHANGE: try realloc when adding
+  node->cluster = (struct adjTreeList_t*) malloc(10*sizeof(adjTreeList_t));
   return node;
 };
 
@@ -51,13 +53,22 @@ void addTree(graph_t* graph, int u, int v){
 
       //make a new parent node for u and v
       node_t* node = newNode(graph->tree->size);
+
       node->sibling = NULL;
+
+      //update cluster
+      node->cluster[0].nodes = graph->tree->list[u].nodes;
+      node->cluster[1].nodes = graph->tree->list[v].nodes;
+      node->cluster->size = 2;
+
+
       //put into adj list
       graph->tree->list[graph->tree->size].nodes = node;
 
       //updates the subtree size
       node->n = node->n + 2;
       node->rank = ceil(log2(node->n));
+
 
       //update height
       node->height = graph->tree->list[u].nodes->root->height + 1;
@@ -73,6 +84,7 @@ void addTree(graph_t* graph, int u, int v){
 
       //update levels
       recurseLevel(node, node, 0);
+      //print cluster
 
       //update parent
       graph->tree->list[u].nodes->root->parent = graph->tree->list[graph->tree->size].nodes;
@@ -82,16 +94,15 @@ void addTree(graph_t* graph, int u, int v){
       //update tree size
       graph->tree->size++;
 
-      //make local tree for new node
-      //graph->tree->list[v].nodes->root->localTree = makeLT(graph->tree,   graph->tree->list[v].nodes->root);
-
       graph->tree->list[u].nodes->root->localTree = makeLT(graph->tree->list[u].nodes->root);
-
-
     }
     else if(rootu->leaf == 1 && rootv->leaf == 0){
       printf("\nRoot of %d is a leaf\n", u);
 
+      //update cluster
+      int clusterSize = graph->tree->list[v].nodes->root->cluster->size;
+      graph->tree->list[v].nodes->root->cluster[clusterSize].nodes = graph->tree->list[u].nodes;
+      graph->tree->list[v].nodes->root->cluster->size++;
 
       mergeLT(graph->tree->list[v].nodes->root, graph->tree->list[u].nodes->root);
       //Update subtree size
@@ -111,12 +122,11 @@ void addTree(graph_t* graph, int u, int v){
       //update children size for root
       (graph->tree->list[v].nodes->root->size) = rootv->size+1;
 
-      //update local tree
-      //updateLT(graph->tree->list[v].nodes->root->localTree, graph->tree->list[v].nodes->root);
-
     }
     else if(rootu->leaf == 0 && rootv->leaf == 1){
       addTree(graph, v, u);
+      return;
+
     }
     else if(rootu->leaf == 0 && rootv->leaf == 0){
       printf("None are leaves\n");
@@ -127,10 +137,18 @@ void addTree(graph_t* graph, int u, int v){
       //updateLT(graph->tree->list[u].nodes->root->localTree, graph->tree->list[u].nodes->root);
       }
     }
+    //Update tree(a) bitmap
   else{
     printf("\n%d and %d share the same root\n", u, v);
-    //Update nontree bitmap
+    //Update non-tree(a) bitmap
   }
+
+  printf("\nValues in cluster\n");
+  int k;
+  for(k = 0; k<graph->tree->list[v].nodes->root->cluster->size;k++){
+    printf("addTree: Cluster value %d\n", graph->tree->list[v].nodes->root->cluster[k].nodes->name);
+  }
+
   //update tree bitmap at level i
   //updateLT(graph->tree->list[u].nodes->localTree, graph->tree->list[u].nodes->root);
 
@@ -148,6 +166,7 @@ void delTree(graph_t* graph, int u, int v){
     printf("Level of %d is %d\n", graph->tree->list[v].nodes->name, high);
     minLevelNode = graph->tree->list[v].nodes;
   }
+  
 
 }
 
@@ -177,7 +196,7 @@ void Clusters(struct node_t* node){
 
 void mergeNodes(node_t* a, node_t* b){
   struct node_t* child = b->children;
-
+  //Updates children
   a->children->last->sibling = b->children;
   while(child){
     a->size = a->size +1;
@@ -186,7 +205,14 @@ void mergeNodes(node_t* a, node_t* b){
   }
   a->n = a->n+ b->n;
   a->rank = floor(log2(a->n));
-  b = NULL;
 
+  //Updates cluster
+  int i;
+  for(i = 0; i<b->cluster->size;i++){
+    a->cluster[a->cluster->size].nodes = b->cluster[i].nodes;
+    a->cluster->size++;
+  }
+
+  b = NULL;
 
 }

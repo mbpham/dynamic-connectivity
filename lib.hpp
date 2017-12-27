@@ -1,64 +1,62 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <set>
 using namespace std;
 
 /* --------- GRAPH ---------*/
 // vertex representation that has a pointer to the next vertex
 struct vertex_t {
-  int               name  ;
-  char              label ;
-  struct  vertex_t* next  ;
+  int               name  ; //Key of the vertex
+  struct  vertex_t* next  ; //Pointer to its connections
 } ;
 
-// adj list for where list.vertex is the vertex that has connections to the others
-// points to the head of the head vertex
 struct adjList_t {
-  struct vertex_t*  vertex ;
+  struct vertex_t*  vertex ; //Pointer to the head of the head vertex
 } ;
 
 // graph representation
-// size is number of vertex' in the graph
 struct graph_t {
-  int                  size     ;
-  struct adjList_t*    graphArr ;
-  struct structTree_t* tree     ;
+  int                  size     ; //Number of vertices in graph
+  struct adjList_t*    graphArr ; //List of all vertices
+  struct structTree_t* tree     ; //The structural tree for the graph
 } ;
 
 /* --------- STRUCTURAL TREE ---------*/
 // structural tree representation
 // every node has a parent
 struct node_t {
-  int                   name      ;
-  struct node_t*        parent    ;
-  int                   level     ;
-  int                   leaf      ;
-  struct node_t*        root      ;
-  struct localTree_t*   localTree ;
-  int                   height    ;
-  struct node_t*        children  ;
-  int                   size      ; //num of children
-  int                   n         ;
-  int                   rank      ;
-  struct node_t*        sibling   ;
-  struct node_t*        last      ;
-  struct localNode_t*   localRoot ;
+  struct localNode_t*          localRoot ; //Points to its local root
+  struct localTree_t*          localTree ; //Localtree of node a, where a is the local root
+  struct node_t*               parent    ; //Points to the nodes parent
+  struct node_t*               root      ; //Points to the root of the tree
+  struct node_t*               children  ; //Points to the first child that points to its siblings
+  struct node_t*               sibling   ; //Points to the next sibling
+  struct node_t*               last      ; //Points to the last sibling
+  struct adjTreeList_t*        cluster   ; //List with pointers to descending leaves
+  int                          size      ; //num of children
+  int                          n         ; //Number of leaves descending from node
+  int                          rank      ; //Rank of node is log2(n)
+  int                          level     ; //level of the node
+  int                          leaf      ; //1 if the node is a leaf in structTree
+  int                          height    ; //Height of the subtree rooted in node
+  int                          name      ; //Key of the node
 } ;
 
 // adj list for nodes
 struct adjTreeList_t {
-  struct node_t*  nodes   ;
+  int             size    ; //Size of cluster
+  struct node_t*  nodes   ; //Pointer to the node in structural tree
 } ;
 
 // the structural tree representation
 struct structTree_t {
-  int                   size     ;
-  struct adjTreeList_t* list     ;
+  int                   size     ; //Size of the structural tree
+  struct adjTreeList_t* list     ; //List of nodes in structural tree
 } ;
 
 /* --------- LOCAL TREE ---------*/
 // binary local tree representation
-
 struct localNode_t {
   int                   name      ;
   int                   tree      ;
@@ -87,9 +85,7 @@ struct localTree_t {
   int                   pNodes;
 } ;
 
-
 /* ------------------ FUNCTIONS ------------------*/
-
 /* --------- GRAPH ---------*/
 // building the graph
 struct graph_t* makeGraph(int size);
@@ -103,10 +99,14 @@ void searchEdge(graph_t* graph, vertex_t* vertex, int u, int v);
 
 /* --------- STRUCTURAL TREE ---------*/
 struct node_t* newNode(int name);
-//update level and root for structural tree
-void recurseLevel(node_t* root, node_t* currentRoot, int level);
+
+struct node_t* newClusterNode(node_t* name);
+
 // bulding structural tree
 struct structTree_t* initStructTree(graph_t* graph);
+
+//update level and root for structural tree
+void recurseLevel(node_t* root, node_t* currentRoot, int level);
 
 void mergeNodes(node_t* a, node_t* b);
 
@@ -127,6 +127,8 @@ struct localTree_t* initLocalTree(node_t* node);
 
 struct localNode_t* newLocalNode(int name);
 
+struct localTree_t* makeLT(node_t* localRoot);
+
 // merging nodes in LT
 void mergeLT(node_t* u, node_t* v);
 
@@ -134,7 +136,5 @@ void mergeLT(node_t* u, node_t* v);
 void search();
 
 void updateLT(localTree_t* tree, node_t* node);
-
-struct localTree_t* makeLT(node_t* localRoot);
 
 void pairNodes(localTree_t* tree, node_t* node, localNode_t* arr[]);
