@@ -10,5 +10,5 @@ int main(int argc, char** argv)
     addEdge(a,1,5);
     addEdge(a,4,3);
     addEdge(a,1,4);
-    //addEdge(a,4,7);
+    addEdge(a,4,7);
   }

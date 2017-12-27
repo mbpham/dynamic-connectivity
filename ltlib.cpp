@@ -11,7 +11,7 @@ using namespace std;
 int comp(const void *p, const void *q){
     struct localNode_t* l = ((struct localNode_t *)p);
     struct localNode_t* r = ((struct localNode_t *)q);
-    //printf("Compare left: %d, right: %d\n", l->rank, r->rank);
+    printf("Compare left: %d, right: %d\n", l->rank, r->rank);
     return (l->rank - r->rank);
 }
 
@@ -89,14 +89,14 @@ void updateLT(localTree_t* tree, node_t* localRoot){
   for(k = 1; k<tree->size; k++){
     if(tree->list[k].node->parent->name == -1){
       arr[q] = tree->list[k].node;
-      printf("UpdateLT: %d inserted to array\n", arr[q]->name);
+      printf("UpdateLT: %d inserted to array in index %d\n", arr[q]->name, q);
       q++;
       tree->roots = q;
     }
   }
   int size = q;
   //sorting array by rank
-  qsort(arr, tree->pNodes, sizeof(localNode_t*), comp);
+  qsort(arr, size, sizeof(struct localNode_t*), comp);
 
   //paring nodes
   tree->build = 0;
@@ -147,7 +147,7 @@ void updateLT(localTree_t* tree, node_t* localRoot){
       //printf("child to path node %d\n", arr[k]->name);
     }
   }
-  printf("T %d, R: %d\n", tree->list[0].node->right->right->left->name, tree->list[0].node->right->left->rank);
+  //printf("T %d, R: %d\n", tree->list[0].node->right->right->left->name, tree->list[0].node->right->left->rank);
 
 
 };
@@ -231,8 +231,9 @@ void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
   int size = tree->roots;
   tree->roots = 0;
   //pair nodes from sorted list with the same rank r
-  for(i = 1; i<size;i++){
-
+  for(i = size-1; i>0;i--){
+    //printf("index is %d\n", i);
+    //printf("%d\n", arr[i-1]->name);
     printf("PairNodes: Trying to pair %d with rank %d and %d with rank %d\n", arr[i-1]->name, arr[i-1]->rank, arr[i]->name, arr[i]->rank);
     if(((arr[i]->parent->name == -1)&&(arr[i-1]->parent->name == -1))) {
       if(arr[i]->rank == arr[i-1]->rank){
@@ -261,7 +262,7 @@ void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
         //remove the children from array and keep parent
         arr[i] = newParent;
         printf("PairNodes: new node is %d and put into index %d\n", arr[i]->name, i);
-        i++;
+        i--;
         if(size > 3){
           tree->build = 0;
           }
@@ -273,10 +274,11 @@ void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
           tree->roots++;
         }
 
-        if(i == size-1){
-          printf("PairNodes: The last node in arr is %d with rank %d and is changed to a pnode \n", arr[i]->name, arr[i]->rank);
+        if(i == 1){
+          printf("%d\n", i);
+          printf("PairNodes: The last node in arr is %d with rank %d and is changed to a pnode \n", arr[i-1]->name, arr[i-1]->rank);
           tree->roots++;
-          arr[i]->pNode = 1;
+          arr[i-1]->pNode = 1;
         }
       }
       else{
