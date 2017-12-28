@@ -64,7 +64,6 @@ void addTree(graph_t* graph, int u, int v){
 
       //put into adj list
       graph->tree->list[graph->tree->size].nodes = node;
-
       //updates the subtree size
       node->n = node->n + 2;
       node->rank = ceil(log2(node->n));
@@ -84,12 +83,12 @@ void addTree(graph_t* graph, int u, int v){
 
       //update levels
       recurseLevel(node, node, 0);
-      //print cluster
 
       //update parent
-      graph->tree->list[u].nodes->root->parent = graph->tree->list[graph->tree->size].nodes;
-      graph->tree->list[v].nodes->root->parent = graph->tree->list[graph->tree->size].nodes;
-
+      graph->tree->list[u].nodes->root = graph->tree->list[graph->tree->size].nodes;
+      graph->tree->list[v].nodes->root = graph->tree->list[graph->tree->size].nodes;
+      graph->tree->list[u].nodes->parent = graph->tree->list[graph->tree->size].nodes;
+      graph->tree->list[v].nodes->parent = graph->tree->list[graph->tree->size].nodes;
 
       //update tree size
       graph->tree->size++;
@@ -169,6 +168,7 @@ void delTree(graph_t* graph, int u, int v){
 
   minLevelNode = minLevelNode->parent;
   while(1){
+    printf("Parent is %d\n", minLevelNode->name);
     if(search(minLevelNode->cluster, u) == 1 && search(minLevelNode->cluster, v) == 1){
       printf("delTree: Matching node found: %d at level %d\n", minLevelNode->name, minLevelNode->level);
       break;
@@ -180,14 +180,16 @@ void delTree(graph_t* graph, int u, int v){
   //look at children of minLevelNode
 
 
-  //Look for a replacement edge 
+  //Look for a replacement edge
 
 
 }
 
 int search(adjTreeList_t* cluster, int elem){
+  printf("2\n");
   int size = cluster->size;
   int i = 0;
+
   while (i < size && elem != cluster[i].nodes->name) {
       i++;
   }
@@ -231,6 +233,7 @@ void mergeNodes(node_t* a, node_t* b){
   while(child){
     a->size = a->size +1;
     child->parent = a;
+    printf("Parent to %d is %d\n", child->name, a->name);
     child = child->sibling;
   }
   a->n = a->n+ b->n;

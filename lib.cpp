@@ -75,6 +75,7 @@ void searchEdge(graph_t* graph, vertex_t* vertex, int u, int v){
     graph->graphArr[u].vertex = vertex->next;
     //printf("First vertex in %d list: %d\n", u, vertex->name);
   }
+
   vertex_t* prev = vertex;
   vertex = vertex->next;
   while(vertex != NULL){
@@ -89,7 +90,6 @@ void searchEdge(graph_t* graph, vertex_t* vertex, int u, int v){
   }
 
 }
-
 
 /* --------- PRINTS ---------*/
 // Printing vertex connections
