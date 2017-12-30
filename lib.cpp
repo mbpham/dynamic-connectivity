@@ -44,32 +44,51 @@ void addEdge(graph_t* graph, int u, int v){
   struct vertex_t* newVertex = makeAdjList(v);
   // makes v point to u
   newVertex->next = graph->graphArr[u].vertex;
+  if(graph->tree->list[u].nodes->root == graph->tree->list[v].nodes->root){
+    newVertex->nontreeEdge = 1;
+    //printf("add as nonTree edge at level i\n");
+  }
+
   // makes the new vertex the head of the adj. list
   graph->graphArr[u].vertex = newVertex;
+
+
 
   // connection from v to u
   newVertex = makeAdjList(u);
   newVertex->next = graph->graphArr[v].vertex;
   graph->graphArr[v].vertex = newVertex;
 
+  if(graph->tree->list[u].nodes->root == graph->tree->list[v].nodes->root){
+    newVertex->nontreeEdge = 1;
+    //printf("add as nonTree edge at level i\n");
+  }
+
   //Updates structural tree
+
   addTree(graph, u, v);
 }
 
 // delete an edge
 void deleteEdge(graph_t* graph, int u, int v){
   printf("\n---------------------------------------------\n");
-  vertex_t* headu = graph->graphArr[u].vertex;
-  vertex_t* headv = graph->graphArr[v].vertex;
-  //deleting v from u adj list
-  printf("Deleting edge (%d,%d)\n", u, v);
-  searchEdge(graph, headu, u, v);
-  //deleting u from v adj list
-  searchEdge(graph, headv, v, u);
-  delTree(graph, u, v);
-
+  if(graph->tree->list[u].nodes->root == graph->tree->list[v].nodes->root){
+    printf("%d and %d are connected. Updating graph.\n", u, v);
+    vertex_t* headu = graph->graphArr[u].vertex;
+    vertex_t* headv = graph->graphArr[v].vertex;
+    //deleting v from u adj list
+    printf("Deleting edge (%d,%d)\n", u, v);
+    searchEdge(graph, headu, u, v);
+    //deleting u from v adj list
+    searchEdge(graph, headv, v, u);
+    delTree(graph, u, v);
+  }
+  else{
+    printf("%d and %d are not connected. The job is done.\n", u, v);
+  }
 }
 
+//searches for vertices u and v in graph adj list and move pointers st they are not connected
 void searchEdge(graph_t* graph, vertex_t* vertex, int u, int v){
   if(vertex->name == v){
     graph->graphArr[u].vertex = vertex->next;

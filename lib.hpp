@@ -2,13 +2,17 @@
 #include <string>
 #include <sstream>
 #include <set>
+
+#include <iterator>
 using namespace std;
 
 /* --------- GRAPH ---------*/
 // vertex representation that has a pointer to the next vertex
 struct vertex_t {
-  int               name  ; //Key of the vertex
-  struct  vertex_t* next  ; //Pointer to its connections
+  int               name    ; //Key of the vertex
+  int               nontreeEdge;
+  int               level   ;
+  struct  vertex_t* next    ; //Pointer to its connections
 } ;
 
 struct adjList_t {
@@ -59,8 +63,8 @@ struct structTree_t {
 // binary local tree representation
 struct localNode_t {
   int                   name      ;
-  int                   tree      ;
-  int                   nonTree   ;
+  char                   tree      ;
+  char                   nonTree   ;
   int                   pNode     ;
   struct localNode_t*   left      ;
   struct localNode_t*   right     ;
@@ -113,6 +117,10 @@ void mergeNodes(node_t* a, node_t* b);
 void addTree(graph_t* graph, int u, int v);
 
 void delTree(graph_t* graph, int u, int v);
+
+node_t* smallest(node_t* u, node_t* v);
+
+int DFSsmallestTree(node_t* currentRoot, int count);
 
 // replace
 void replace(graph_t graph);

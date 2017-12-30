@@ -18,9 +18,10 @@ int comp(const void *p, const void *q){
 struct localNode_t* newLocalNode(int name){
   struct localNode_t* newNode = (struct localNode_t*) malloc(sizeof(struct localNode_t));
   newNode->name = name;
-  newNode->tree = 0;
-  newNode->nonTree = 0;
+  newNode->tree = '0';
+  newNode->nonTree = '0';
   newNode->pNode = 0;
+
   return newNode;
 } ;
 
@@ -258,10 +259,13 @@ void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
 
         //place the new parent in local tree list
         tree->list[tree->size-1].node = newParent;
-
+        //newParent->nonTree = (tree->list[tree->size-1].node->nonTree)|(tree->list[tree->size].node->nonTree);
+        //printf("Nontree bitmap %c\n", newParent->nonTree);
+        printf("%c\n", '0101');
         //remove the children from array and keep parent
         arr[i] = newParent;
         printf("PairNodes: new node is %d and put into index %d\n", arr[i]->name, i);
+
         i--;
         if(size > 3){
           tree->build = 0;

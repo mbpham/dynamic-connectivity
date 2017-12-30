@@ -21,6 +21,8 @@ struct node_t* newNode(int name){
   node->rank = 0;
   //CHANGE: try realloc when adding
   node->cluster = (struct adjTreeList_t*) malloc(10*sizeof(adjTreeList_t));
+  node->cluster[0].nodes = node;
+  node->cluster->size = 1;
   return node;
 };
 
@@ -57,10 +59,9 @@ void addTree(graph_t* graph, int u, int v){
       node->sibling = NULL;
 
       //update cluster
-      node->cluster[0].nodes = graph->tree->list[u].nodes;
-      node->cluster[1].nodes = graph->tree->list[v].nodes;
-      node->cluster->size = 2;
-
+      node->cluster[1].nodes = graph->tree->list[u].nodes;
+      node->cluster[2].nodes = graph->tree->list[v].nodes;
+      node->cluster->size = 3;
 
       //put into adj list
       graph->tree->list[graph->tree->size].nodes = node;
@@ -133,12 +134,15 @@ void addTree(graph_t* graph, int u, int v){
       mergeNodes(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
       mergeLT(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
       recurseLevel(graph->tree->list[u].nodes->root->parent, graph->tree->list[u].nodes->root->parent, 0);
-      //updateLT(graph->tree->list[u].nodes->root->localTree, graph->tree->list[u].nodes->root);
+
       }
     }
     //Update tree(a) bitmap
   else{
     printf("\n%d and %d share the same root\n", u, v);
+    //Insert non-tree edge
+
+
     //Update non-tree(a) bitmap
   }
 
@@ -156,6 +160,11 @@ void addTree(graph_t* graph, int u, int v){
 void delTree(graph_t* graph, int u, int v){
   //find the first common local root
   node_t* minLevelNode;
+  node_t* firstCommonNode;
+  node_t* levelpp1;
+  node_t* levelpp2;
+
+
   int high = min(graph->tree->list[u].nodes->level, graph->tree->list[v].nodes->level);
   if (graph->tree->list[u].nodes->level == high){
     //printf("Level of %d is %d\n", graph->tree->list[u].nodes->name, high);
@@ -167,7 +176,7 @@ void delTree(graph_t* graph, int u, int v){
   }
 
   minLevelNode = minLevelNode->parent;
-  while(1){
+  while(minLevelNode){
     printf("Parent is %d\n", minLevelNode->name);
     if(search(minLevelNode->cluster, u) == 1 && search(minLevelNode->cluster, v) == 1){
       printf("delTree: Matching node found: %d at level %d\n", minLevelNode->name, minLevelNode->level);
@@ -175,21 +184,59 @@ void delTree(graph_t* graph, int u, int v){
     }
     minLevelNode = minLevelNode->parent;
   }
+  firstCommonNode = minLevelNode;
 
   //increase level by 1
   //look at children of minLevelNode
+  //find i+1 localroot for u and v
+  minLevelNode = minLevelNode->children;
+  while(minLevelNode){
+    if(search(minLevelNode->cluster, u) == 1){
+      levelpp1 = minLevelNode;
+    }
+    else if(search(minLevelNode->cluster, v) == 1){
+      levelpp2 = minLevelNode;
+    }
+    minLevelNode = minLevelNode->sibling;
+  }
+  int i;
+  //find the smallest tree
+  printf("delTree: Finding smallest tree\n");
+  node_t* smallestNode;
+  if(levelpp1->leaf == 1 && levelpp2->leaf == 1){
+    printf("Both are leaves. What to do...\n");
+    //Choose smallest tree, u?
+    smallest = levelpp1;
+    //search for a replacement edge. Assume that there is none in the
+    //beginning since there are no edges in the leaves.
+    //start using the graph, change to using local trees and bitmaps later
+    
 
+
+    //increase level of tree
+
+    //search for edges in bitmap
+
+    //merge if we find a level i+1 edge that is connected to u
+
+    //remove
+
+  }
+  else{
+    //CHANGE: count parallel
+    smallestNode = smallest(levelpp1, levelpp2);
+  }
 
   //Look for a replacement edge
+  //update levels of smallestNode
+
 
 
 }
 
 int search(adjTreeList_t* cluster, int elem){
-  printf("2\n");
   int size = cluster->size;
   int i = 0;
-
   while (i < size && elem != cluster[i].nodes->name) {
       i++;
   }
@@ -202,6 +249,32 @@ int search(adjTreeList_t* cluster, int elem){
 }
 
 /* --------- UPDATES ---------*/
+
+//finds the smallest tree at level
+node_t* smallest(node_t* u, node_t* v){
+  int uSize = DFSsmallestTree(u, 0);
+  int vSize = DFSsmallestTree(v, 0);
+
+  if(uSize < vSize){
+    return u;
+  }
+  else if (vSize < uSize){
+    return v;
+  }
+  else{
+    return u;
+  }
+}
+
+int DFSsmallestTree(node_t* currentRoot, int count){
+  node_t* nextSibling = currentRoot;
+  while (nextSibling) {
+    count++;
+    DFSsmallestTree(nextSibling->sibling, count);
+    nextSibling = nextSibling->children;
+  }
+  return count;
+}
 
 void recurseLevel(node_t* root, node_t* currentRoot, int level){
   node_t* nextSibling = currentRoot;
