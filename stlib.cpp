@@ -161,8 +161,11 @@ void delTree(graph_t* graph, int u, int v){
   //find the first common local root
   node_t* minLevelNode;
   node_t* firstCommonNode;
+  node_t* smallestNode;
   node_t* levelpp1;
   node_t* levelpp2;
+  node_t* other;
+  int replacement = 0;
 
 
   int high = min(graph->tree->list[u].nodes->level, graph->tree->list[v].nodes->level);
@@ -177,9 +180,8 @@ void delTree(graph_t* graph, int u, int v){
 
   minLevelNode = minLevelNode->parent;
   while(minLevelNode){
-    printf("Parent is %d\n", minLevelNode->name);
     if(search(minLevelNode->cluster, u) == 1 && search(minLevelNode->cluster, v) == 1){
-      printf("delTree: Matching node found: %d at level %d\n", minLevelNode->name, minLevelNode->level);
+      printf("\ndelTree: Matching node found: %d at level %d\n", minLevelNode->name, minLevelNode->level);
       break;
     }
     minLevelNode = minLevelNode->parent;
@@ -202,26 +204,70 @@ void delTree(graph_t* graph, int u, int v){
   int i;
   //find the smallest tree
   printf("delTree: Finding smallest tree\n");
-  node_t* smallestNode;
+
   if(levelpp1->leaf == 1 && levelpp2->leaf == 1){
-    printf("Both are leaves. What to do...\n");
-    //Choose smallest tree, u?
-    smallest = levelpp1;
+    printf("delTree: Both are leaves. What to do...\n");
+    //Choose smallest tree as the one with fewest connections
+    if(graph->tree->list[u].size < graph->tree->list[v].size){
+      smallestNode = levelpp1;
+      other = levelpp2;
+
+    }
+    else{
+      smallestNode = levelpp2;
+      other = levelpp1;
+    }
+
+    printf("delTree: Smallest node is %d\n", smallestNode->name);
     //search for a replacement edge. Assume that there is none in the
     //beginning since there are no edges in the leaves.
     //start using the graph, change to using local trees and bitmaps later
-    
 
+    vertex_t* nexts = graph->graphArr[other->name].vertex;
 
-    //increase level of tree
+    while(nexts){
+      vertex_t* nexts1 = graph->graphArr[nexts->name].vertex;
+      while(nexts1){
+        if(nexts1->name == smallestNode->name){
+          printf("delTree: replacement found at %d\n", nexts->name);
+          replacement = 1;
+          //delete edge from nontree edge set in graph
+          printf("Change (%d, %d) to a tree edge\n", nexts->name, nexts1->name);
+          nexts->nontreeEdge = 0;
+          vertex_t* nexts2 = graph->graphArr[nexts1->name].vertex;
+          //delete edge from nontree edge set in the other direction
+          while(nexts2){
+            if(nexts2->name == nexts->name){
+              printf("delTree: Change (%d, %d) to a tree edge\n", nexts1->name, nexts2->name);
+              nexts2->nontreeEdge = 0;
+              break;
+            }
+            nexts2 = nexts2->next;
+          }
+          break;
+        }
+        nexts1 = nexts1->next;
+      }
+      if(replacement == 1){
+        break;
+      }
+      nexts = nexts->next;
+    }
 
-    //search for edges in bitmap
+    if(replacement == 0){
+      printf("delTree: No replacement found\n");
+      //increase level of tree and give it a new parent
+      node_t* newParent = newNode(graph->tree->size);
+      newParent->children = smallestNode;
+      printf("Child of new %d is %d\n", newParent->name, newParent->children->name);
+      smallestNode->parent = newNode;
+      smallestNode->root = newParent;
+      
+      //update structTree cluster for firstCommonNode
 
-    //merge if we find a level i+1 edge that is connected to u
-
-    //remove
-
+    }
   }
+
   else{
     //CHANGE: count parallel
     smallestNode = smallest(levelpp1, levelpp2);

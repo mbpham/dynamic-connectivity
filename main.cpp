@@ -13,6 +13,7 @@ int main(int argc, char** argv){
     addEdge(a,3,4);
     addEdge(a,3,2);
 
+
     deleteEdge(a,8,1);
     deleteEdge(a,1,5);
     prettyPrinting(a);

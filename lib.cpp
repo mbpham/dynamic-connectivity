@@ -59,6 +59,8 @@ void addEdge(graph_t* graph, int u, int v){
   newVertex->next = graph->graphArr[v].vertex;
   graph->graphArr[v].vertex = newVertex;
 
+  graph->graphArr[u].size++;
+  graph->graphArr[v].size++;
   if(graph->tree->list[u].nodes->root == graph->tree->list[v].nodes->root){
     newVertex->nontreeEdge = 1;
     //printf("add as nonTree edge at level i\n");
@@ -72,6 +74,8 @@ void addEdge(graph_t* graph, int u, int v){
 // delete an edge
 void deleteEdge(graph_t* graph, int u, int v){
   printf("\n---------------------------------------------\n");
+  graph->graphArr[u].size--;
+  graph->graphArr[v].size--;
   if(graph->tree->list[u].nodes->root == graph->tree->list[v].nodes->root){
     printf("%d and %d are connected. Updating graph.\n", u, v);
     vertex_t* headu = graph->graphArr[u].vertex;

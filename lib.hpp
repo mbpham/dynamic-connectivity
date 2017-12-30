@@ -16,6 +16,7 @@ struct vertex_t {
 } ;
 
 struct adjList_t {
+  int size;
   struct vertex_t*  vertex ; //Pointer to the head of the head vertex
 } ;
 
