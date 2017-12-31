@@ -12,7 +12,7 @@ int main(int argc, char** argv){
     addEdge(a,1,3);
     addEdge(a,3,4);
     addEdge(a,3,2);
-
+    addEdge(a,5,3);
 
     deleteEdge(a,8,1);
     deleteEdge(a,1,5);

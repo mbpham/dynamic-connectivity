@@ -124,7 +124,7 @@ void prettyPrinting(graph_t* graph) {
     printf("\nConnections to %d\n", i);
     printf("head ");
     while(nexts){
-      printf("-> %d", nexts->name);
+      printf("-> %d", nexts->nontreeEdge);
       nexts = nexts->next;
     }
   }
