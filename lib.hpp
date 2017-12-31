@@ -132,13 +132,14 @@ int isConnected(graph_t* graph, int u, int v);
 
 int search(adjTreeList_t* cluster, int elem);
 
-void updateSiblings();
-void updateClusters();
+void updateSiblings(graph_t* graph, node_t* p, node_t* tv, int level);
+void updateClusters(adjTreeList_t* pCluster, adjTreeList_t* tvCluster);
 void noReplacementUpdate(node_t* tv, node_t* firstCommonNode,
   graph_t* graph, int currentLevel);
 
 int findReplacement(graph_t* graph, node_t* tv, node_t* tw);
 void updateNonTree(int u, int v, graph_t* graph);
+int graphConnected(graph_t* graph, int u, int v);
 
 /* --------- LOCAL TREE ---------*/
 struct node_t* findMinLevelNode(graph_t* graph, int u, int v);
