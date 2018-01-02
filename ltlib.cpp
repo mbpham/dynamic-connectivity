@@ -2,8 +2,8 @@
 #include <string>
 #include <sstream>
 using namespace std;
-#include "lib.hpp"
 #include <math.h>
+#include "lib.hpp"
 
 /* --------- LOCAL TREE ---------*/
 // building local tree
@@ -18,19 +18,32 @@ int comp(const void *p, const void *q){
 struct localNode_t* newLocalNode(int name){
   struct localNode_t* newNode = (struct localNode_t*) malloc(sizeof(struct localNode_t));
   newNode->name = name;
-  newNode->tree = '0';
-  newNode->nonTree = '0';
   newNode->pNode = 0;
-
   return newNode;
 } ;
 
 struct localTree_t* initLocalTree(node_t* node){
+
+  //allocate memory for local tree
   localTree_t* localTree = (struct localTree_t*) malloc(sizeof(struct localTree_t));
   localTree->list = (struct adjLTList_t*) malloc(sizeof(struct adjLTList_t));
-  localTree->list[0].node = newLocalNode(node->name);
-  node->localTree = localTree;
+  
+  //check if there are any children
+  if(node->children == NULL){
+    localNode_t* newNode = newLocalNode(node->name);
+    newNode
+    localTree->list[0].node = newNode;
+
+  }
+  else(){
+
+  }
+
   localTree->root = localTree->list[0].node;
+
+
+
+
   localTree->size = 1;
   localTree->pNodes = 1;
   return localTree;
@@ -40,6 +53,8 @@ struct localTree_t* initLocalTree(node_t* node){
 struct localTree_t* makeLT(node_t* localRoot){
   printf("Name of local root is %d\n", localRoot->name);
   localNode_t* newRoot = newLocalNode(localRoot->name);
+
+
 
   newRoot->rank = localRoot->rank;
   localTree_t* localTree = (struct localTree_t*) malloc(sizeof(struct localTree_t));
@@ -155,7 +170,136 @@ void updateLT(localTree_t* tree, node_t* localRoot){
 
 };
 
-void updateSTLT(localTree_t* tree, node_t* localRoot){
+void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
+  printf("\nGetting started with the pairing\n");
+  int i;
+  int size = tree->roots;
+  tree->roots = 0;
+  //pair nodes from sorted list with the same rank r
+  for(i = size-1; i>0;i--){
+    printf("PairNodes: Trying to pair %d with rank %d and %d with rank %d\n", arr[i-1]->name, arr[i-1]->rank, arr[i]->name, arr[i]->rank);
+    if(((arr[i]->parent->name == -1)&&(arr[i-1]->parent->name == -1))) {
+      if(arr[i]->rank == arr[i-1]->rank){
+        printf("PairNodes: Pairing nodes %d and %d with rank %d\n", arr[i-1]->name, arr[i]->name, arr[i]->rank);
+        tree->roots++;
+        tree->size++;
+
+        //making a new parent node
+        localNode_t* newParent = newLocalNode(tree->size);
+        newParent->rank = arr[i]->rank +1;
+        newParent->pNode = 1;
+        newParent->parent = arr[i]->parent;
+        arr[i]->pNode = 0;
+        arr[i-1]->pNode = 0;
+
+
+        //update parents and children
+        newParent->left = arr[i-1];
+        newParent->right = arr[i];
+        arr[i]->parent = newParent;
+        arr[i-1]->parent = newParent;
+
+        //place the new parent in local tree list
+        tree->list[tree->size-1].node = newParent;
+        //newParent->nonTree = (tree->list[tree->size-1].node->nonTree)|(tree->list[tree->size].node->nonTree);
+        //printf("Nontree bitmap %c\n", newParent->nonTree);
+        //remove the children from array and keep parent
+        arr[i] = newParent;
+        printf("PairNodes: new node is %d and put into index %d\n", arr[i]->name, i);
+
+        i--;
+        if(size > 3){
+          tree->build = 0;
+          }
+        }
+        else{
+          printf("PairNodes: Nodes %d and %d do not have the same ranks: %d and %d\n", arr[i-1]->name, arr[i]->name, arr[i-1]->rank, arr[i]->rank);
+          arr[i-1]->pNode = 1;
+          arr[i]->pNode = 1;
+          tree->roots++;
+        }
+
+        if(i == 1){
+          printf("PairNodes: The last node in arr is %d with rank %d and is changed to a pnode \n", arr[i-1]->name, arr[i-1]->rank);
+          tree->roots++;
+          arr[i-1]->pNode = 1;
+        }
+      }
+      else{
+        printf("PairNodes: %d and %d are not roots of their subtree\n", arr[i-1]->name, arr[i]->name);
+      }
+    }
+} ;
+
+// merging local roots by deleting rank paths and do the same procedure as in updateLT
+void mergeLT(node_t* u, node_t* v){
+  printf("MergeLT: Merging roots %d and %d\n", u->name, v->name);
+  int i;
+  //Deleting rank path
+  if(v->leaf == 1){
+    v->localTree->list[0].node->parent = u->localTree->list[u->localTree->size-1].node->parent;
+    u->localTree->list[u->localTree->size] = v->localTree->list[0];
+    u->size++;
+    u->localTree->size++;
+    u->localTree->roots++;
+
+  }
+  else{
+    for(i = 1; i<v->localTree->size; i++){
+      if((v->localTree->list[i].node->name != -1) && (v->localTree->list[i].node->parent->name == -1)){
+          printf("MergeLT: Putting %d into u list\n", v->localTree->list[i].node->name);
+          u->localTree->list[u->localTree->size] = v->localTree->list[i];
+          u->localTree->size++;
+          u->localTree->roots++;
+      }
+    }
+  }
+  u->localTree->roots = u->localTree->size-1;
+  u->localTree->pNodes = u->localTree->pNodes + v->localTree->pNodes;
+
+  for(i = 1; i<u->localTree->size;i++){
+    printf("MergeLT: Node: %d, Rank: %d Parent: %d\n", u->localTree->list[i].node->name, u->localTree->list[i].node->rank, u->localTree->list[i].node->parent->name);
+  }
+  updateLT(u->localTree, u);
+
+};
+
+void tree(localNode_t* a, int level, int keep){
+  //update tree bitmap
+  unsigned int bit_position, setOrUnsetBit, ch;
+  unsigned char bit_Map_array_index, shift_index;
+
+  bit_position = level;
+  setOrUnsetBit = keep;
+  bit_Map_array_index = (bit_position-1) / 8;
+  shift_index =  (bit_position-1) % 8;
+  if(setOrUnsetBit){
+    a->tree[bit_Map_array_index] |= 1<<shift_index;
+  }
+  else{
+    a->tree[bit_Map_array_index] &= ~(1<<shift_index);
+  }
+} ;
+
+void nonTree(localNode_t* a, int level, int keep){
+  //update nontree bitmap
+  unsigned int bit_position, setOrUnsetBit, ch;
+  unsigned char bit_Map_array_index, shift_index;
+
+  bit_position = level;
+  setOrUnsetBit = keep;
+  bit_Map_array_index = (bit_position-1) / 8;
+  shift_index =  (bit_position-1) % 8;
+  if(setOrUnsetBit){
+    a->nonTree[bit_Map_array_index] |= 1<<shift_index;
+  }
+  else{
+    a->nonTree[bit_Map_array_index] &= ~(1<<shift_index);
+  }
+} ;
+
+// search for connection
+/*void updateSTLT(localTree_t* tree, node_t* localRoot){
 
   tree->size = localRoot->size+1;
   tree->roots = tree->size;
@@ -226,109 +370,4 @@ void updateSTLT(localTree_t* tree, node_t* localRoot){
   }
   printf("%d\n", tree->list[0].node->right->left->name);
 
-};
-
-void pairNodes(localTree_t* tree, node_t* localRoot, localNode_t* arr[]){
-  printf("\nGetting started with the pairing\n");
-  int i;
-  int size = tree->roots;
-  tree->roots = 0;
-  //pair nodes from sorted list with the same rank r
-  for(i = size-1; i>0;i--){
-    printf("PairNodes: Trying to pair %d with rank %d and %d with rank %d\n", arr[i-1]->name, arr[i-1]->rank, arr[i]->name, arr[i]->rank);
-    if(((arr[i]->parent->name == -1)&&(arr[i-1]->parent->name == -1))) {
-      if(arr[i]->rank == arr[i-1]->rank){
-        printf("PairNodes: Pairing nodes %d and %d with rank %d\n", arr[i-1]->name, arr[i]->name, arr[i]->rank);
-        tree->roots++;
-        tree->size++;
-
-        //making a new parent node
-        localNode_t* newParent = newLocalNode(tree->size);
-        newParent->rank = arr[i]->rank +1;
-        newParent->pNode = 1;
-        newParent->parent = arr[i]->parent;
-        arr[i]->pNode = 0;
-        arr[i-1]->pNode = 0;
-
-
-        //update parents and children
-        newParent->left = arr[i-1];
-        newParent->right = arr[i];
-        arr[i]->parent = newParent;
-        arr[i-1]->parent = newParent;
-
-        //place the new parent in local tree list
-        tree->list[tree->size-1].node = newParent;
-        //newParent->nonTree = (tree->list[tree->size-1].node->nonTree)|(tree->list[tree->size].node->nonTree);
-        //printf("Nontree bitmap %c\n", newParent->nonTree);
-        printf("%c\n", '0101');
-        //remove the children from array and keep parent
-        arr[i] = newParent;
-        printf("PairNodes: new node is %d and put into index %d\n", arr[i]->name, i);
-
-        i--;
-        if(size > 3){
-          tree->build = 0;
-          }
-        }
-        else{
-          printf("PairNodes: Nodes %d and %d do not have the same ranks: %d and %d\n", arr[i-1]->name, arr[i]->name, arr[i-1]->rank, arr[i]->rank);
-          arr[i-1]->pNode = 1;
-          arr[i]->pNode = 1;
-          tree->roots++;
-        }
-
-        if(i == 1){
-          printf("PairNodes: The last node in arr is %d with rank %d and is changed to a pnode \n", arr[i-1]->name, arr[i-1]->rank);
-          tree->roots++;
-          arr[i-1]->pNode = 1;
-        }
-      }
-      else{
-        printf("PairNodes: %d and %d are not roots of their subtree\n", arr[i-1]->name, arr[i]->name);
-      }
-    }
-} ;
-
-// merging local roots by deleting rank paths and do the same procedure as in updateLT
-void mergeLT(node_t* u, node_t* v){
-  printf("MergeLT: Merging roots %d and %d\n", u->name, v->name);
-  int i;
-  //Deleting rank path
-  if(v->leaf == 1){
-    v->localTree->list[0].node->parent = u->localTree->list[u->localTree->size-1].node->parent;
-    u->localTree->list[u->localTree->size] = v->localTree->list[0];
-    u->size++;
-    u->localTree->size++;
-    u->localTree->roots++;
-
-  }
-  else{
-    for(i = 1; i<v->localTree->size; i++){
-      if((v->localTree->list[i].node->name != -1) && (v->localTree->list[i].node->parent->name == -1)){
-          printf("MergeLT: Putting %d into u list\n", v->localTree->list[i].node->name);
-          u->localTree->list[u->localTree->size] = v->localTree->list[i];
-          u->localTree->size++;
-          u->localTree->roots++;
-      }
-    }
-  }
-  u->localTree->roots = u->localTree->size-1;
-  u->localTree->pNodes = u->localTree->pNodes + v->localTree->pNodes;
-
-  for(i = 1; i<u->localTree->size;i++){
-    printf("MergeLT: Node: %d, Rank: %d Parent: %d\n", u->localTree->list[i].node->name, u->localTree->list[i].node->rank, u->localTree->list[i].node->parent->name);
-  }
-  updateLT(u->localTree, u);
-
-};
-
-void tree(localNode_t* a){
-  //update tree bitmap
-} ;
-
-void nonTree(localNode_t* a){
-  //update nontree bitmap
-} ;
-
-// search for connection
+};*/
