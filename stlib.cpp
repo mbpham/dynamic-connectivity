@@ -27,7 +27,7 @@ struct node_t* newNode(int name){
 
 // Build the structural tree
 struct structTree_t* initStructTree(graph_t* graph){
-  int i, j, depth;
+  int i, j;
 
   //allocate memory in the structural tree
   structTree_t* structTree = (struct structTree_t*) malloc(sizeof(struct structTree_t));
@@ -40,25 +40,24 @@ struct structTree_t* initStructTree(graph_t* graph){
     structTree->list[i].nodes->root = structTree->list[i].nodes;
 
     //point to vertex that the cluster represents
-    structTree->list[i].nodes->to = graph->graphArr[i].nodes;
+    structTree->list[i].nodes->to = graph->graphArr[i].vertex;
 
     //make parents for the node until the forest depth is reached
-    depth = floor(log2(graph->size));
+    int depth = floor(log2(graph->size));
     node_t* node = structTree->list[i].nodes;
     for(j = 0; j<depth; j++){
       node->parent = newNode(i);
-      node->level = depth - j;
+      node->level = depth - (j+1);
       node->parent->children = node;
-      //TODO: initialize local tree for each of the nodes
-      //TODO: fix initialization
-      //TODO: set bitmap
       node->localTree = initLocalTree(node);
+      if(j == depth-1){
+        break;
+      }
       node = node->parent;
     }
-
     //update root for all descending nodes
     node_t* root = node;
-    for(j = 0; j<depth+1; j++){
+    for(j = 0; j<depth; j++){
       node->root = root;
       node->cluster[0].nodes = structTree->list[i].nodes;
       node->cluster->size = 1;
@@ -243,7 +242,6 @@ void Clusters(struct node_t* node){
 void updateRoot(node_t* newRoot, node_t* delRoot){
   node_t* child = delRoot;
   while(child){
-    printf("updating root\n");
     child->root = newRoot;
     updateRoot(newRoot, child->sibling);
     child = child->children;
@@ -267,6 +265,7 @@ void mergeNodes(node_t* a, node_t* b){
   while(child){
     a->size = a->size +1;
     child->parent = a;
+    addLT(a->localTree, child);
     child = child->sibling;
   }
 

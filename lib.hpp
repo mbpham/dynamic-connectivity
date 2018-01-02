@@ -49,7 +49,7 @@ struct node_t {
   int                          leaf      ; //1 if the node is a leaf in structTree
   int                          height    ; //Height of the subtree rooted in node
   int                          name      ; //Key of the node
-  struct vertex_t*             to          ; //1 elem cluster (leaves) points to the vertices, to later see connections
+  struct vertex_t*             to        ; //1 elem cluster (leaves) points to the vertices, to later see connections
 } ;
 
 // adj list for nodes
@@ -80,7 +80,7 @@ struct localNode_t {
                                       //when pair two nodes with rank r: give parent rank r+1
   struct localNode_t*   root        ; //points the local tree root
   struct connected_t*   conArr      ; //array that tells which vertices the nodes are connected to
-
+  struct node_t*        belongsTo   ; //point to the structural node it belongs to
 } ;
 
 struct connected_t{
@@ -176,6 +176,8 @@ struct node_t* findFirstCommon(graph_t* graph, int u, int v);
 /* --------- LOCAL TREE ---------*/
 struct node_t* findMinLevelNode(graph_t* graph, int u, int v);
 
+void addLT(localTree_t* a, node_t* b);
+
 // initializes local tree
 struct localTree_t* initLocalTree(node_t* node);
 
@@ -184,7 +186,7 @@ struct localNode_t* newLocalNode(int name);
 struct localTree_t* makeLT(node_t* localRoot);
 
 // merging nodes in LT
-void mergeLT(node_t* u, node_t* v);
+void mergeLT(localTree_t* Tu, localTree_t* Tv);
 
 //bitmap updates
 void tree(localNode_t* a, int level, int keep);
@@ -193,9 +195,12 @@ void nonTree(localNode_t* a, int level, int keep);
 
 // search for connection
 
-void updateLT(localTree_t* tree, node_t* node);
+void updateLT(localTree_t* tree);
 
-void pairNodes(localTree_t* tree, node_t* node, localNode_t* arr[]);
+void pairNodes(localTree_t* Tu, localNode_t* arr[]);
+
+void delRankPath(localTree_t* Tu, localTree_t* Tv);
+void buildRankPath(localTree_t* Tu, localNode_t* arr[]);
 
 /*TRASH*/
 /*void recurseLevel(node_t* root, node_t* currentRoot, int level){
