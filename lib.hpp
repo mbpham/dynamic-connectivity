@@ -174,6 +174,11 @@ int graphConnected(graph_t* graph, int u, int v);
 struct node_t* findFirstCommon(graph_t* graph, int u, int v);
 
 /* --------- LOCAL TREE ---------*/
+
+void printBitmap(unsigned char bitmap[]);
+
+void print_byte_as_bits(char val);
+
 struct node_t* findMinLevelNode(graph_t* graph, int u, int v);
 
 void addLT(localTree_t* a, node_t* b);
@@ -183,8 +188,6 @@ struct localTree_t* initLocalTree(node_t* node);
 
 struct localNode_t* newLocalNode(int name);
 
-struct localTree_t* makeLT(node_t* localRoot);
-
 // merging nodes in LT
 void mergeLT(localTree_t* Tu, localTree_t* Tv);
 
@@ -193,26 +196,9 @@ void tree(localNode_t* a, int level, int keep);
 
 void nonTree(localNode_t* a, int level, int keep);
 
-// search for connection
-
 void updateLT(localTree_t* tree);
 
 void pairNodes(localTree_t* Tu, localNode_t* arr[]);
 
 void delRankPath(localTree_t* Tu, localTree_t* Tv);
 void buildRankPath(localTree_t* Tu, localNode_t* arr[]);
-
-/*TRASH*/
-/*void recurseLevel(node_t* root, node_t* currentRoot, int level){
-  //printf("\n");
-  node_t* nextSibling = currentRoot;
-  while (nextSibling) {
-    recurseLevel(root, nextSibling->sibling, level);
-    nextSibling->level = level;
-    nextSibling->root = root;
-    printf("recurseLevel: Root for %d is: %d\n", nextSibling->name, nextSibling->root->name);
-    printf("recurseLevel: %d's level is: %d\n", nextSibling->name, nextSibling->level);
-    nextSibling = nextSibling->children;
-    level++;
-  }
-} ;*/

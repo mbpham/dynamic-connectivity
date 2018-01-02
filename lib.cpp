@@ -5,7 +5,7 @@
 #include <math.h>
 using namespace std;
 
-/* --------- GRAPH ---------*/
+/* --------- GRAPH INITIALIZING AND HELPER FUNCTIONS ---------*/
 // building adj list
 struct vertex_t* makeAdjList(int v){
   //make pointer to a vertex w and allocate memory
@@ -34,6 +34,7 @@ struct graph_t* makeGraph(int size){
   return graph;
 }
 
+/* --------- UPDATES AFTER INSERTION OR DELETION --------- */
 // add edge, make connection between two vertex'
 void addEdge(graph_t* graph, int u, int v){
   printf("\n---------------------------------------------\n");
@@ -49,7 +50,8 @@ void addEdge(graph_t* graph, int u, int v){
     else{
       printf("Update nontree edge\n");
       //TODO: add nontree edge at level of their first common node
-      
+
+
     }
   }
   //if they are not connected, connect and update structural forest
@@ -107,6 +109,7 @@ void deleteEdge(graph_t* graph, int u, int v){
   }
 }
 
+/* --------- SEARCHES --------- */
 //searches for vertices u and v in graph adj list and move pointers st they are not connected
 void searchEdge(graph_t* graph, vertex_t* vertex, int u, int v){
   if(vertex->name == v){
@@ -144,6 +147,8 @@ int isConnected(graph_t* graph, int u, int v){
   }
   return 0;
 }
+
+/* --------- UPDATES --------- */
 
 
 /* --------- PRINTS ---------*/

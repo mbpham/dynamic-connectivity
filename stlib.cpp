@@ -5,11 +5,8 @@ using namespace std;
 #include "ltlib.cpp"
 #include <math.h>
 
-/* --------- STRUCTURAL TREE ---------*/
-// initialize struct tree
-//struct structTree_t* initStructTree(graph_t* graph){
-//};
-
+/* --------- STRUCTURAL TREE INITIALIZING AND HELPER FUNCTIONS ---------*/
+//Function for making a structural node
 struct node_t* newNode(int name){
   struct node_t* node = (struct node_t*) malloc(sizeof(node_t));
   node->name = name;
@@ -25,6 +22,7 @@ struct node_t* newNode(int name){
   return node;
 };
 
+// initialize struct tree
 // Build the structural tree
 struct structTree_t* initStructTree(graph_t* graph){
   int i, j;
@@ -69,15 +67,25 @@ struct structTree_t* initStructTree(graph_t* graph){
   return structTree;
 };
 
+
+/* --------- UPDATES AFTER INSERTION OR DELETION --------- */
+
 //updates structural tree after edge insertion
 void addTree(graph_t* graph, int u, int v){
+  //updates local tree in mergeNodes
   mergeNodes(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
-  //TODO: update local trees
           //TODO: update tree bitmap
 
 } ;
 
+void delTree(graph_t* graph, int u, int v){
+  //
+}
 
+
+/* --------- SEARCHES ---------*/
+
+//Look for two vertices first common node in structural forest
 struct node_t* findFirstCommon(graph_t* graph, int u, int v){
   node_t* minLevelNode;
   minLevelNode = findMinLevelNode(graph, u, v);
@@ -93,6 +101,18 @@ struct node_t* findFirstCommon(graph_t* graph, int u, int v){
   }
   return minLevelNode;
 }
+
+struct node_t* findMinLevelNode(graph_t* graph, int u, int v){
+  int high = min(graph->tree->list[u].nodes->level, graph->tree->list[v].nodes->level);
+  if (graph->tree->list[u].nodes->level == high){
+    //printf("Level of %d is %d\n", graph->tree->list[u].nodes->name, high);
+    return graph->tree->list[u].nodes;
+  }
+  else{
+    //printf("Level of %d is %d\n", graph->tree->list[v].nodes->name, high);
+    return graph->tree->list[v].nodes;
+  }
+};
 
 int findReplacement(graph_t* graph, node_t* tv, node_t* tw){
   //looking at the linked list for tw
@@ -118,52 +138,6 @@ int findReplacement(graph_t* graph, node_t* tv, node_t* tw){
 
 }
 
-//split the two trees at level i, updates children, siblings and clusters
-/*
-void noReplacementUpdate(node_t* tv, node_t* firstCommonNode, graph_t* graph, int currentLevel){
-  printf("delTree: No replacement found\n");
-
-  //increase level of tv and give it a new parent
-  node_t* newParent = newNode(graph->tree->size);
-  newParent->children = tv;
-  tv->parent = newParent;
-  tv->root = newParent;
-  tv->last = tv;
-
-  //update siblings
-  updateSiblings(graph, firstCommonNode, tv, currentLevel);
-
-  //update cluster for new parent
-  node_t* newParentChildren = newParent->children;
-  while(newParentChildren){
-    int i;
-    for(i = 0; i<newParentChildren->cluster->size; i++){
-      newParent->cluster[newParent->cluster->size].nodes = newParentChildren->cluster[i].nodes;
-      newParent->cluster->size++;
-    }
-    newParentChildren = newParentChildren->sibling;
-  }
-
-
-  //update levels
-  //recurseLevel(newParent, newParent, 0);
-
-  Clusters(newParent);
-
-}*/
-
-struct node_t* findMinLevelNode(graph_t* graph, int u, int v){
-  int high = min(graph->tree->list[u].nodes->level, graph->tree->list[v].nodes->level);
-  if (graph->tree->list[u].nodes->level == high){
-    //printf("Level of %d is %d\n", graph->tree->list[u].nodes->name, high);
-    return graph->tree->list[u].nodes;
-  }
-  else{
-    //printf("Level of %d is %d\n", graph->tree->list[v].nodes->name, high);
-    return graph->tree->list[v].nodes;
-  }
-};
-
 int search(adjTreeList_t* cluster, int elem){
   int size = cluster->size;
   int i = 0;
@@ -179,6 +153,20 @@ int search(adjTreeList_t* cluster, int elem){
 }
 
 /* --------- UPDATES ---------*/
+struct node_t* smallest(node_t* u, node_t* v){
+  int uSize = DFSsmallestTree(u, 0);
+  int vSize = DFSsmallestTree(v, 0);
+
+  if(uSize < vSize){
+    return u;
+  }
+  else if (vSize < uSize){
+    return v;
+  }
+  else{
+    return u;
+  }
+}
 //removes nontree edges and add them as tree edges
 void updateNonTree(int u, int v, graph_t* graph){
   vertex_t* nextu = graph->graphArr[u].vertex;
@@ -200,30 +188,6 @@ void updateNonTree(int u, int v, graph_t* graph){
     }
     nextv = nextv->next;
   }
-}
-node_t* smallest(node_t* u, node_t* v){
-  int uSize = DFSsmallestTree(u, 0);
-  int vSize = DFSsmallestTree(v, 0);
-
-  if(uSize < vSize){
-    return u;
-  }
-  else if (vSize < uSize){
-    return v;
-  }
-  else{
-    return u;
-  }
-}
-
-int DFSsmallestTree(node_t* currentRoot, int count){
-  node_t* nextSibling = currentRoot;
-  while (nextSibling) {
-    count++;
-    DFSsmallestTree(nextSibling->sibling, count);
-    nextSibling = nextSibling->children;
-  }
-  return count;
 }
 
 void Clusters(struct node_t* node){
@@ -285,345 +249,12 @@ void mergeNodes(node_t* a, node_t* b){
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*TRASH*/
-
-/*int graphConnected(graph_t* graph, int u, int v){
-  vertex_t* nextu = graph->graphArr[u].vertex;
-  vertex_t* nextv = graph->graphArr[v].vertex;
-  //delete edge from nontree edge set in the other direction
-  while(nextu){
-    if(nextu->name == v){
-      return 1;
-    }
-    nextu = nextu->next;
+int DFSsmallestTree(node_t* currentRoot, int count){
+  node_t* nextSibling = currentRoot;
+  while (nextSibling) {
+    count++;
+    DFSsmallestTree(nextSibling->sibling, count);
+    nextSibling = nextSibling->children;
   }
-  return 0;
-}*/
-
-//removes an element from one cluster, add to tv cluster and clear space in p clus
-/*void updateClusters(adjTreeList_t* pCluster, adjTreeList_t* tvCluster, int removeElem){
-
-  //remove from cluster in p
-  int c = 0;
-
-  while(1){
-    //try to clear the space in p cluster
-    if(pCluster[c].nodes->name == removeElem){
-
-      tvCluster[tvCluster->size].nodes = pCluster[c].nodes;
-      tvCluster->size++;
-      int k=c;
-      while(k<pCluster->size-1){
-        pCluster[k] = pCluster[k+1];
-        //printf("updateClusters: %d's new descending leaf is %d\n", k, pCluster[k].nodes->name);
-        k++;
-      }
-      pCluster->size--;
-      break;
-    }
-    c++;
-  }
-}*/
-
-/*void updateSiblings(graph_t* graph, node_t* p, node_t* tv, int level){
-  node_t* newParent = tv->parent;
-  int i;
-  int j ;
-  int isConnectedTV;
-
-  //update siblings in structural forest
-  adjTreeList_t* tvCluster = tv->cluster;
-  node_t* siblings = p->children;
-  node_t* prev;
-  //if p is pointing to tv at the first child
-  //then simply let p point to its sibling instead
-  if(siblings == tv){
-    p->children = tv->sibling;
-    siblings = siblings->sibling;
-  }
-  //check for all siblings clusters if anything is connected to tv,
-  //that is not connected to anything else
-  while(siblings){
-    node_t* temp = siblings;
-    printf("\nupdateSiblings: Current sibling is %d\n", siblings->name);
-    adjTreeList_t* clusterVal = siblings->cluster;
-    //The siblings cluster
-    const int size = tvCluster->size;
-    int clusterSize = clusterVal->size;
-    for(i = 0; i<clusterSize;i++){
-      printf("updateSiblings: Current clusterVal is %d\n", clusterVal[i].nodes->name);
-      //the cluster values in tv
-      for(j = 0; j<size;j++){
-        isConnectedTV = graphConnected(graph, clusterVal[i].nodes->name, tvCluster[j].nodes->name);
-        if(isConnectedTV||(tvCluster[j].nodes->name  == clusterVal[i].nodes->name)){
-          printf("updateSiblings: %d, connected, remove %d as sibling \n", tvCluster[j].nodes->name,siblings->name);
-
-          prev->sibling = siblings->sibling;
-          printf("updateSiblings: %d's new sibling is: %d\n", prev->name, siblings->sibling->name);
-
-          if(!(tvCluster[j].nodes->name  == clusterVal[i].nodes->name)){
-            newParent->children->last->sibling = temp;
-            newParent->children->last = temp;
-            newParent->children->last->sibling = NULL;
-          }
-          else{
-            temp->sibling = NULL;
-          }
-
-          updateClusters(p->cluster, tvCluster, tvCluster[j].nodes->name);
-          if(tvCluster[j].nodes->name == clusterVal[i].nodes->name){
-            tvCluster->size--;
-          }
-
-
-          siblings = prev;
-        }
-      }
-    }
-
-    prev = siblings;
-    siblings = siblings->sibling;
-  }
-
-
-}*/
-
-//finds the smallest tree at level
-
-
-
-
-//void delTree(graph_t* graph, int u, int v){
-  //find the first common local root
-
-//  node_t* firstCommonNode, tv,tw,levelpp1,levelpp2, minLevelNode;
-//  int currentLevel, i;
-//  int replacement = 0;
-
-  /* ------- ALL THE PREPERATIONS ------- */
-  //Find the node with lowest rank
-
-//  firstCommonNode = findFirstCommon(graph, u, v);
-
-  //find tv and tw
-//  minLevelNode = firstCommonNode->children;
-//  while(minLevelNode){
-//    if(search(minLevelNode->cluster, u) == 1){
-//      levelpp1 = minLevelNode;
-//    }
-//    else if(search(minLevelNode->cluster, v) == 1){
-//      levelpp2 = minLevelNode;
-//    }
-//    minLevelNode = minLevelNode->sibling;
-//  }
-
-  //find the smallest tree
-//  printf("delTree: Finding smallest tree\n");
-  /* ------- CASES: equal or not equal -------*/
-//  tv = smallest(levelpp1, levelpp2);
-/*  if(tv == levelpp1){
-    tw = levelpp2;
-  }
-  else{
-    tw = levelpp1;
-  }
-*/
-  //tv and tw has been found
-  //find replacement from tv
-  //call findReplacement
-
-
-  /* ------- CASES: replacement found or not found -------*/
-  //if replacement (u',v') has been discovered at currentLevel,
-  //then simply remove (u', v') from the non-tree edge set
-  //update nontree bitmap
-  //if(){
-
-  //}
-  //if not, search for a replacement at currentLevel+1
-  //else(){
-    /* ------- CASES: level == 0 or level < 0 ------- */
-  //  if(currentLevel == 0){
-  //  }
-  //  else if(currentLevel < 0){
-  //  }
-  //}
-  //if both clusters are leaves, we know that they are equal,
-  //hence we will choose T_v by the one with fewest connections
-  /*if(levelpp1->leaf == 1 && levelpp2->leaf == 1){
-    //FIND SMALLEST TREE T_V
-    currentLevel = firstCommonNode->level;
-    printf("delTree: Both are t_v and t_w leaves\n");
-    //Choose smallest tree as the one with fewest connections
-    if(graph->tree->list[u].size < graph->tree->list[v].size){
-      //Smallest "tree" is tv
-      tv = levelpp1;
-      tw = levelpp2;
-
-    }
-    else{
-      //Smallest "tree" is tv
-      tv = levelpp2;
-      tw = levelpp1;
-    }
-
-    printf("delTree: Smallest tree is rooted at %d\n", tv->name);
-
-    //UPDATE TREE EDGES (TV AND TW ARE LEAVES)
-    //find replacement edge at level i
-    replacement = findReplacement(graph, tv, tw);
-
-    //No replacement is edge is found
-    if(replacement == 0){
-      noReplacementUpdate(tv, firstCommonNode, graph, currentLevel);
-    }
-  }
-
-  else{
-    //CHANGE: count parallel
-    tv = smallest(levelpp1, levelpp2);
-    if(tv == levelpp1){
-      tw = levelpp2;
-    }
-    else{
-      tw = levelpp1;
-    }
-
-    //look for a replacement at tv, and merge with the connected, when finding a
-    //non tree edge sibling
-
-
-  }*/
-//}
-
-/* --------- CHECKS AND SEARCHES ---------*/
-//check using bitmaps
-//int findReplacement(node_t* tv, node_t* tw, int level){
-//  adjTreeList_t* twCluster = tw->cluster;
-
-//}
-
-//From addTree
-/*if(rootu != rootv){
-  if(rootu->leaf == 1 && rootv->leaf == 1){
-    printf("Both %d and %d are leaves\n", rootu->name, rootv->name);
-
-    //make a new parent node for u and v
-    node_t* node = newNode(graph->tree->size);
-
-    node->sibling = NULL;
-
-    //update cluster
-    node->cluster[1].nodes = graph->tree->list[u].nodes;
-    node->cluster[2].nodes = graph->tree->list[v].nodes;
-    node->cluster->size = 3;
-
-    //put into adj list
-    graph->tree->list[graph->tree->size].nodes = node;
-    //updates the subtree size
-    node->n = node->n + 2;
-    node->rank = ceil(log2(node->n));
-
-
-    //update height
-    node->height = graph->tree->list[u].nodes->root->height + 1;
-
-    //update child
-    node->children = graph->tree->list[u].nodes;
-    node->size = 2;
-
-    //update siblings
-    graph->tree->list[u].nodes->sibling = graph->tree->list[v].nodes;
-    graph->tree->list[u].nodes->last = graph->tree->list[v].nodes;
-    graph->tree->list[v].nodes->sibling = NULL;
-
-    //update levels
-    recurseLevel(node, node, 0);
-
-    //update parent
-    graph->tree->list[u].nodes->root = graph->tree->list[graph->tree->size].nodes;
-    graph->tree->list[v].nodes->root = graph->tree->list[graph->tree->size].nodes;
-    graph->tree->list[u].nodes->parent = graph->tree->list[graph->tree->size].nodes;
-    graph->tree->list[v].nodes->parent = graph->tree->list[graph->tree->size].nodes;
-
-    //update tree size
-    graph->tree->size++;
-
-    graph->tree->list[u].nodes->root->localTree = makeLT(graph->tree->list[u].nodes->root);
-  }
-  else if(rootu->leaf == 1 && rootv->leaf == 0){
-    printf("\nRoot of %d is a leaf\n", u);
-
-    //update cluster
-    int clusterSize = graph->tree->list[v].nodes->root->cluster->size;
-    graph->tree->list[v].nodes->root->cluster[clusterSize].nodes = graph->tree->list[u].nodes;
-    graph->tree->list[v].nodes->root->cluster->size++;
-
-    mergeLT(graph->tree->list[v].nodes->root, graph->tree->list[u].nodes->root);
-    //Update subtree size
-    graph->tree->list[v].nodes->root->n = rootv->n + 1;
-    graph->tree->list[v].nodes->root->rank = ceil(log2(graph->tree->list[v].nodes->root->n));
-
-    //update siblings
-    rootv->children->last->sibling = graph->tree->list[u].nodes;
-    rootv->children->last = graph->tree->list[u].nodes;
-    graph->tree->list[u].nodes->sibling = NULL;
-
-    graph->tree->list[u].nodes->root = graph->tree->list[v].nodes->root;
-    graph->tree->list[u].nodes->parent = graph->tree->list[v].nodes->root;
-
-    recurseLevel(rootv, rootv, 0);
-
-    //update children size for root
-    (graph->tree->list[v].nodes->root->size) = rootv->size+1;
-
-  }
-  else if(rootu->leaf == 0 && rootv->leaf == 1){
-    addTree(graph, v, u);
-    return;
-
-  }
-  else if(rootu->leaf == 0 && rootv->leaf == 0){
-    printf("None are leaves\n");
-
-    mergeNodes(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
-    mergeLT(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
-    recurseLevel(graph->tree->list[u].nodes->root->parent, graph->tree->list[u].nodes->root->parent, 0);
-
-    }
-  }
-  //Update tree(a) bitmap
-else{
-  printf("\n%d and %d share the same root\n", u, v);
-  //Insert non-tree edge
-
-
-  //Update non-tree(a) bitmap
+  return count;
 }
-
-printf("\nValues in cluster\n");
-int k;
-for(k = 0; k<graph->tree->list[v].nodes->root->cluster->size;k++){
-  printf("addTree: Cluster value %d\n", graph->tree->list[v].nodes->root->cluster[k].nodes->name);
-}
-
-//update tree bitmap at level i
-//updateLT(graph->tree->list[u].nodes->localTree, graph->tree->list[u].nodes->root);
-*/
