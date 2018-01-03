@@ -38,71 +38,122 @@ struct graph_t* makeGraph(int size){
 // add edge, make connection between two vertex'
 void addEdge(graph_t* graph, int u, int v){
   printf("\n---------------------------------------------\n");
+  printf("\n---------------------------------------------\n");
   printf("\nInserting edge (%d, %d)\n", u, v);
 
+  /*--------- CASES FOR STRUCTURAL FOREST ---------*/
   //first check if they share the same root in structural forest
   if(graph->tree->list[u].nodes->root == graph->tree->list[v].nodes->root){
     //check if they are directly connected
     if(isConnected(graph, u, v)){
-      //do nothing
-      printf("The vertices are already connected\n");
+      printf("addEdge: The vertices are already connected\n");
     }
     else{
-      printf("Update nontree edge\n");
-      //TODO: add nontree edge at level of their first common node
+      //Add a non tree edge
+      //finding first common node
+      int level = findUpdateLevel(graph->tree, u, v);
+      printf("addEdge: Update nontree edge at level %d\n", level);
+
+      //update nontree bitmap for u and v at level
+      nonTree(graph->tree->list[u].nodes->localTree->root, level, 1);
+      nonTree(graph->tree->list[v].nodes->localTree->root, level, 1);
+
+      updateNonBitmaps(graph->tree, u);
+      updateNonBitmaps(graph->tree, v);
+
+      /* --------- ADD TO THE GRAPH ARRAY ---------*/
+      // connection from u to v
+      // making a pointer to a new vertex
+      // makes v point to u
+      struct vertex_t* newVertex = makeAdjList(v);
+      newVertex->next = graph->graphArr[u].vertex;
+      newVertex->level = level;
+      newVertex->nontreeEdge = 1;
+      graph->graphArr[u].vertex = newVertex;
+
+      // connection from v to u
+      newVertex = makeAdjList(u);
+      newVertex->next = graph->graphArr[v].vertex;
+      newVertex->level = level;
+      newVertex->nontreeEdge = 1;
+      graph->graphArr[v].vertex = newVertex;
+
+      // updates number of connections
+      graph->graphArr[u].size++;
+      graph->graphArr[v].size++;
 
 
     }
   }
   //if they are not connected, connect and update structural forest
   else{
-    int i;
+    // Updates structural tree
+    addTree(graph, u, v);
+
+    /* --------- ADD TO THE GRAPH ARRAY ---------*/
     // connection from u to v
     // making a pointer to a new vertex
-    struct vertex_t* newVertex = makeAdjList(v);
-
     // makes v point to u
+    struct vertex_t* newVertex = makeAdjList(v);
     newVertex->next = graph->graphArr[u].vertex;
-
-    // makes the new vertex the head of the adj. list
+    newVertex->level = 0;
+    newVertex->nontreeEdge = 0;
     graph->graphArr[u].vertex = newVertex;
 
     // connection from v to u
     newVertex = makeAdjList(u);
     newVertex->next = graph->graphArr[v].vertex;
+    newVertex->level = 0;
+    newVertex->nontreeEdge = 0;
     graph->graphArr[v].vertex = newVertex;
 
     // updates number of connections
     graph->graphArr[u].size++;
     graph->graphArr[v].size++;
-
-    // Updates structural tree
-    addTree(graph, u, v);
   }
 }
 
 // delete an edge
 void deleteEdge(graph_t* graph, int u, int v){
   printf("\n---------------------------------------------\n");
+  printf("\n---------------------------------------------\n");
 
   // checks if they are connected
   if(isConnected(graph, u, v)){
-    printf("%d and %d are connected. Updating graph.\n", u, v);
+    /* --------- DELETE FROM GRAPH ---------*/
+    printf("deleteEdge: %d and %d are connected.\n", u, v);
     vertex_t* headu = graph->graphArr[u].vertex;
     vertex_t* headv = graph->graphArr[v].vertex;
 
-    printf("Deleting edge (%d,%d)\n", u, v);
+
     //deleting v from u adj list
-    searchEdge(graph, headu, u, v);
+    removedEdge_t* rem = searchEdge(graph, headu, u, v);
     //deleting u from v adj list
     searchEdge(graph, headv, v, u);
 
-    //update structural forest
-    //delTree(graph, u, v);
+    printf("Deleting the level %d edge (%d,%d), nontreeEdge: %d\n", rem->level, u, v, rem->nontreeEdge);
 
     //update the number of connections
     graph->graphArr[u].size--;
     graph->graphArr[v].size--;
+
+    /* --------- STRUCTURAL FOREST ---------*/
+
+    /* CASES: TREE OR NON TREE EDGE REMOVED */
+    if(rem->nontreeEdge){
+      //TODO: make updated for nontree bitmaps
+    }
+    else{
+      //TODO: Implement delTree
+    }
+
+
+
+    //update structural forest
+    //delTree(graph, u, v);
+
+
+
   }
   else{
     printf("%d and %d are not connected. The job is done.\n", u, v);
@@ -111,9 +162,13 @@ void deleteEdge(graph_t* graph, int u, int v){
 
 /* --------- SEARCHES --------- */
 //searches for vertices u and v in graph adj list and move pointers st they are not connected
-void searchEdge(graph_t* graph, vertex_t* vertex, int u, int v){
+//returns the level of the removed edge
+struct removedEdge_t* searchEdge(graph_t* graph, vertex_t* vertex, int u, int v){
+  removedEdge_t* rem;
   if(vertex->name == v){
     graph->graphArr[u].vertex = vertex->next;
+    rem->level = vertex->level;
+    rem->nontreeEdge = vertex->nontreeEdge;
   }
 
   vertex_t* prev = vertex;
@@ -123,11 +178,15 @@ void searchEdge(graph_t* graph, vertex_t* vertex, int u, int v){
     if(vertex->name == v){
       //printf("Deleting from %d: %d\n", u, vertex->name);
       prev->next = vertex->next;
-      break;
+
+      rem->level = vertex->level;
+      rem->nontreeEdge = vertex->nontreeEdge;
+      return rem;
     }
     prev = vertex;
     vertex = vertex->next;
   }
+  return rem;
 }
 
 // checks if two vertices are directly connected
@@ -137,7 +196,6 @@ int isConnected(graph_t* graph, int u, int v){
 
   vertex_t* checkU = graph->graphArr[u].vertex;
   vertex_t* checkV = graph->graphArr[v].vertex;
-  printf("Size: %d\n", minSize);
   for(i = 0; i<minSize; i++){
     if(checkU->name == v || checkV->name == u){
       return 1;
@@ -161,7 +219,7 @@ void prettyPrinting(graph_t* graph) {
     printf("\nConnections to %d\n", i);
     printf("head ");
     while(nexts){
-      printf("-> %d", nexts->name);
+      printf("-> %d(NonTree: %d)(Level: %d)", nexts->name, nexts->nontreeEdge, nexts->level);
       nexts = nexts->next;
     }
   }

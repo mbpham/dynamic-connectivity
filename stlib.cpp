@@ -41,7 +41,7 @@ struct structTree_t* initStructTree(graph_t* graph){
     structTree->list[i].nodes->to = graph->graphArr[i].vertex;
 
     //make parents for the node until the forest depth is reached
-    int depth = floor(log2(graph->size));
+    int depth = ceil(log2(graph->size));
     node_t* node = structTree->list[i].nodes;
     for(j = 0; j<depth; j++){
       node->parent = newNode(i);
@@ -74,13 +74,34 @@ struct structTree_t* initStructTree(graph_t* graph){
 void addTree(graph_t* graph, int u, int v){
   //updates local tree in mergeNodes
   mergeNodes(graph->tree->list[u].nodes->root, graph->tree->list[v].nodes->root);
-          //TODO: update tree bitmap
+  //TODO: update tree bitmap
+  //TODO: update tree bitmap for graph->tree->list[u].nodes in level i
+  tree(graph->tree->list[u].nodes->localTree->list[0].node, 0, 1);
+
+  //TODO: update tree bitmap for graph->tree->list[v].nodes in level i
+  tree(graph->tree->list[v].nodes->localTree->list[0].node, 0, 1);
+
+  //TODO: update bitmaps to root of structural tree
+  updateBitmaps(graph->tree, u);
+  updateBitmaps(graph->tree, v);
 
 } ;
 
 void delTree(graph_t* graph, int u, int v){
-  //
+  //TODO: Merging step
+    //TODO: Find the node that connects u and v and its level
+    //TODO: Find Tu and Tv
+    //TODO: Implement size((x,y),i)
+      //TODO: make an array to save the level i tree edges for Tu and Tv
+    //TODO: Increse levels of level i edges in smaller tree saved before
+
+  //TODO: structural changes
+    //TODO: search for a replacement for (u,v) on level i
+    //TODO: CASES: if replacement not found
+      //TODO: CASES: if i=0, i>0
+
 }
+
 
 
 /* --------- SEARCHES ---------*/
@@ -150,6 +171,19 @@ int search(adjTreeList_t* cluster, int elem){
   else{
     return 0;
   }
+}
+
+//find first common node for node u and v
+int findUpdateLevel(structTree_t* structTree, int u, int v){
+  node_t* node = structTree->list[u].nodes;
+  while(node){
+    if(search(node->cluster, v) == 1){
+      return node->level;
+    }
+    node = node->parent;
+  }
+
+  return 0;
 }
 
 /* --------- UPDATES ---------*/

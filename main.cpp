@@ -10,10 +10,11 @@ int main(int argc, char** argv){
     addEdge(a,1,2);
     addEdge(a,1,5);
     addEdge(a,1,3);
-
+    addEdge(a,2,5);
+    deleteEdge(a,2,5);
     //deleteEdge(a,8,1);
     //deleteEdge(a,1,5);
-    //prettyPrinting(a);
+    prettyPrinting(a);
 
     //addEdge(a,4,3);
     //addEdge(a,1,4);

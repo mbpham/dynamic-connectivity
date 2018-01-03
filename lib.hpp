@@ -5,6 +5,12 @@
 
 #include <iterator>
 using namespace std;
+
+struct removedEdge_t {
+  int level;
+  int nontreeEdge;
+} ;
+
 /* --------- BITMAP ---------*/
 #define BITMAP_LEN 2
 #define BYTE_LEN   8
@@ -42,6 +48,7 @@ struct node_t {
   struct node_t*               sibling   ; //Points to the next sibling
   struct node_t*               last      ; //Points to the last sibling
   struct adjTreeList_t*        cluster   ; //List with pointers to descending leaves
+  struct localNode_t*          parentLeaf; //Points to the local node leaf from the parents local tre
   int                          size      ; //num of children
   int                          n         ; //Number of leaves descending from node
   int                          rank      ; //Rank of node is log2(n)
@@ -123,7 +130,7 @@ void deleteEdge(graph_t* graph, vertex_t v, vertex_t u);
 
 // searches for the connection (u,v) and remove connection
 // TODO: split the function such that we have a search function and a remove function
-void searchEdge(graph_t* graph, vertex_t* vertex, int u, int v);
+struct removedEdge_t* searchEdge(graph_t* graph, vertex_t* vertex, int u, int v);
 
 // check if two vertices are connected
 int isConnected(graph_t* graph, int u, int v);
@@ -132,6 +139,8 @@ int isConnected(graph_t* graph, int u, int v);
 // makes a new node for the structural tree and initializes the values
 // also points to a vertex in the leaves
 struct node_t* newNode(int name);
+
+int findUpdateLevel(structTree_t* structTree, int u, int v);
 
 void updateRoot(node_t* newRoot, node_t* delRoot);
 
@@ -148,7 +157,7 @@ void mergeNodes(node_t* a, node_t* b);
 //
 void addTree(graph_t* graph, int u, int v);
 
-void delTree(graph_t* graph, int u, int v);
+void delTree(graph_t* graph, int u, int v, int level);
 
 node_t* smallest(node_t* u, node_t* v);
 
@@ -177,7 +186,7 @@ struct node_t* findFirstCommon(graph_t* graph, int u, int v);
 
 void printBitmap(unsigned char bitmap[]);
 
-void print_byte_as_bits(char val);
+void byte_as_bits(char bitmap);
 
 struct node_t* findMinLevelNode(graph_t* graph, int u, int v);
 
@@ -202,3 +211,7 @@ void pairNodes(localTree_t* Tu, localNode_t* arr[]);
 
 void delRankPath(localTree_t* Tu, localTree_t* Tv);
 void buildRankPath(localTree_t* Tu, localNode_t* arr[]);
+void updateNonBitmaps(structTree_t* structTree, int node);
+void updateBitmaps(structTree_t* structTree, int node);
+void nonbitWiseAND(localNode_t* a, localNode_t* b, localNode_t* newNode);
+void nonbitWiseOR(localNode_t* a, localNode_t* b, localNode_t* newNode);
