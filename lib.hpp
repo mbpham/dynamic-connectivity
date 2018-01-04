@@ -170,10 +170,6 @@ void addTree(graph_t* graph, int u, int v);
 
 void delTree(graph_t* graph, int u, int v, int level);
 
-node_t* smallest(node_t* u, node_t* v);
-
-int DFSsmallestTree(node_t* currentRoot, int count);
-
 // replace
 void replace(graph_t graph);
 
@@ -198,7 +194,8 @@ void Size(tv_t* tv, node_t* x, node_t* y, int level);
 void structSearchDown(tv_t* tv, node_t* yi1, int level);
 void localSearchDown(tv_t* tv, localNode_t* currentLocal, int level);
 int visited(int vis1[], int vis2[], int seek1, int seek2, int size);
-
+struct tv_t* initTv();
+struct node_t* findLevelnode(node_t* node, int level);
 
 /* --------- LOCAL TREE ---------*/
 
@@ -229,6 +226,9 @@ void pairNodes(localTree_t* Tu, localNode_t* arr[]);
 
 void delRankPath(localTree_t* Tu, localTree_t* Tv);
 void buildRankPath(localTree_t* Tu, localNode_t* arr[]);
+
+
+//bitmap updates
 void updateNonBitmaps(structTree_t* structTree, int node);
 void updateBitmaps(structTree_t* structTree, int node);
 void nonbitWiseAND(localNode_t* a, localNode_t* b, localNode_t* newNode);

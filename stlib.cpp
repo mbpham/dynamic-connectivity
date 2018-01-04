@@ -66,6 +66,15 @@ struct structTree_t* initStructTree(graph_t* graph){
   return structTree;
 };
 
+struct tv_t* initTv(){
+  tv_t* tv = (struct tv_t*) malloc(sizeof(tv_t));
+  tv->size = 0;
+  tv->arr = (struct adjTreeList_t*) malloc(100* sizeof(adjTreeList_t));
+  tv->visited1 = (int*) malloc(50*sizeof(int));
+  tv->visited2 = (int*) malloc(50*sizeof(int));
+  return tv;
+}
+
 /* --------- UPDATES AFTER INSERTION OR DELETION --------- */
 
 //updates structural tree after edge insertion
@@ -88,45 +97,80 @@ void addTree(graph_t* graph, int u, int v){
 void delTree(graph_t* graph, int u, int v, int level){
 
   printf("\ndelTree: Running size procedure\n");
-  tv_t* tvp = (struct tv_t*) malloc(sizeof(tv_t));
-  tvp->size = 0;
-  tvp->arr = (struct adjTreeList_t*) malloc(100* sizeof(adjTreeList_t));
-  tvp->visited1 = (int*) malloc(50*sizeof(int));
-  tvp->visited2 = (int*) malloc(50*sizeof(int));
 
-  tv_t* tvu = (struct tv_t*) malloc(sizeof(tv_t));
-  tvu->size = 0;
-  tvu->arr = (struct adjTreeList_t*) malloc(100* sizeof(adjTreeList_t));
-  tvu->visited1 = (int*) malloc(sizeof(int));
-  tvu->visited2 = (int*) malloc(sizeof(int));
+  tv_t* tvp = initTv();
+  tv_t* tvu = initTv();
 
+  //Finding size of trees, but we do not run the procedures parallel to each other
   Size(tvp, graph->tree->list[u].nodes, graph->tree->list[v].nodes, level);
   Size(tvu, graph->tree->list[v].nodes, graph->tree->list[u].nodes, level);
 
   //defining tv
-  node_t* tv;
+  tv_t* smaller;
+  tv_t* larger;
 
+  //Finding smallest tree
   int minSize = min(tvu->size, tvp->size);
   if(tvu->size == minSize){
-    tv = tvu->node;
-    printf("%d\n", tvu->arr[0].nodes->name);
+    smaller = tvu;
+    larger = tvp;
   }
   else{
-    tv = tvp->node;
-    printf("%d\n", tvp->arr[0].nodes->name);
+    smaller = tvp;
+    larger = tvu;
+  }
+
+  printf("delTree: Smaller tree is %d\n", smaller->node->name);
+  node_t* tv = smaller->node;
+  if(smaller->size == 1){
+    //TODO: update tree bitmap such that it does not have any tree edges
+    int updateIndex = smaller->arr[0].nodes->name;
+    localNode_t* singleLeaf = graph->tree->list[updateIndex].nodes->localTree->root;
+    tree(singleLeaf, level, 0);
+
+  }
+  else{
+    //increase all level i edges in smaller tree by 1
+    for(int i = 0 ; i < (smaller->size) ; i++){
+      vertex_t* vertex = smaller->arr[i].nodes->to;
+
+      while (vertex) {
+        if(vertex->level == level){
+          vertex->level++;
+        }
+        vertex = vertex->next;
+      }
+      
+      node_t* mergeNode = findLevelnode(smaller->arr[i].nodes, level+1);
+
+    }
+    //TODO: update tree bitmap
+
+    //TODO: merges nodes
   }
 
 
-    //TODO: Increse levels of level i edges in smaller tree saved before
+
+
 
   //TODO: structural changes
+    //TODO: merge nodes
     //TODO: search for a replacement for (u,v) on level i
     //TODO: CASES: if replacement found or not
       //TODO: CASES: if i=0, i>0
 
 }
 
+
+
 /* --------- SEARCHES ---------*/
+
+struct node_t* findLevelnode(node_t* node, int level){
+  while(node->level != level){
+    node = node->parent;
+  }
+  return node;
+}
 
 //Finds the number of nodes connected to y in F_i \ (x,y)
 void Size(tv_t* tv, node_t* x, node_t* y, int level){
@@ -266,7 +310,8 @@ struct node_t* findMinLevelNode(graph_t* graph, int u, int v){
 
 //TODO: after collecting T_v: test if a nontree edge (x,y) is a replacement edge
 //TODO: test if x^i+1 != y^i+1
-int findReplacement(graph_t* graph, node_t* tv, node_t* tw){
+
+/*int findReplacement(graph_t* graph, node_t* tv, node_t* tw){
   //looking at the linked list for tw
   //and see if there is anything from the list that is connected to tv
   vertex_t* twConnections = graph->graphArr[tw->name].vertex;
@@ -288,7 +333,7 @@ int findReplacement(graph_t* graph, node_t* tv, node_t* tw){
   }
   return 0;
 
-}
+}*/
 
 //Return 1 if elem is in the cluster, return 0 otherwise
 int search(adjTreeList_t* cluster, int elem){
@@ -319,20 +364,6 @@ int findUpdateLevel(structTree_t* structTree, int u, int v){
 }
 
 /* --------- UPDATES ---------*/
-struct node_t* smallest(node_t* u, node_t* v){
-  int uSize = DFSsmallestTree(u, 0);
-  int vSize = DFSsmallestTree(v, 0);
-
-  if(uSize < vSize){
-    return u;
-  }
-  else if (vSize < uSize){
-    return v;
-  }
-  else{
-    return u;
-  }
-}
 //removes nontree edges and add them as tree edges
 void updateNonTree(int u, int v, graph_t* graph){
   vertex_t* nextu = graph->graphArr[u].vertex;
@@ -413,14 +444,4 @@ void mergeNodes(node_t* a, node_t* b){
 
   b = NULL;
 
-}
-
-int DFSsmallestTree(node_t* currentRoot, int count){
-  node_t* nextSibling = currentRoot;
-  while (nextSibling) {
-    count++;
-    DFSsmallestTree(nextSibling->sibling, count);
-    nextSibling = nextSibling->children;
-  }
-  return count;
 }
