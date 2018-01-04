@@ -189,7 +189,10 @@ void addLT(localTree_t* a, node_t* b){
 }
 
 //remove a child b from a
-void delLT(){}
+void delLT(){
+}
+
+
 
 /* --------- BITMAP UPDATES --------- */
 
@@ -252,8 +255,7 @@ void nonbitWiseAND(localNode_t* a, localNode_t* b, localNode_t* newNode){
   }
 }
 
-
-//TODO: update anscestors for the tree or non tree bitmap
+//update anscestors for the tree or non tree bitmap
 //"node" is the index of the leaf in the structural tree
 void updateBitmaps(structTree_t* structTree, int node){
   printf("\nupdateBitmaps: Updating the bitmaps from leaf to root for %d\n", node);
@@ -372,6 +374,21 @@ void updateNonBitmaps(structTree_t* structTree, int node){
   }
   printf("updateNonBitmaps: bitmaps successfully updated\n");
 }
+
+//Return 1 if there is an edge on level i
+int isEdge(unsigned char bitmap[], int level){
+  unsigned char bit_Map_array_index, shift_index;
+  bit_Map_array_index = (level) / 8;
+
+  shift_index =  (level) % 8;
+
+  if(bitmap[bit_Map_array_index] & (1 << (7-shift_index))) {
+    return 1;
+  }
+
+  return 0;
+}
+
 
 /* --------- RANK PATH UPDATES --------- */
 

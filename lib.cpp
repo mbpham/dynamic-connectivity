@@ -69,13 +69,18 @@ void addEdge(graph_t* graph, int u, int v){
       newVertex->next = graph->graphArr[u].vertex;
       newVertex->level = level;
       newVertex->nontreeEdge = 1;
+      newVertex->structNode = graph->tree->list[v].nodes;
+      graph->tree->list[u].nodes->to = newVertex;
       graph->graphArr[u].vertex = newVertex;
+
 
       // connection from v to u
       newVertex = makeAdjList(u);
       newVertex->next = graph->graphArr[v].vertex;
       newVertex->level = level;
       newVertex->nontreeEdge = 1;
+      newVertex->structNode = graph->tree->list[u].nodes;
+      graph->tree->list[v].nodes->to = newVertex;
       graph->graphArr[v].vertex = newVertex;
 
       // updates number of connections
@@ -98,6 +103,8 @@ void addEdge(graph_t* graph, int u, int v){
     newVertex->next = graph->graphArr[u].vertex;
     newVertex->level = 0;
     newVertex->nontreeEdge = 0;
+    newVertex->structNode = graph->tree->list[v].nodes;
+    graph->tree->list[u].nodes->to = newVertex;
     graph->graphArr[u].vertex = newVertex;
 
     // connection from v to u
@@ -105,6 +112,8 @@ void addEdge(graph_t* graph, int u, int v){
     newVertex->next = graph->graphArr[v].vertex;
     newVertex->level = 0;
     newVertex->nontreeEdge = 0;
+    newVertex->structNode = graph->tree->list[u].nodes;
+    graph->tree->list[v].nodes->to = newVertex;
     graph->graphArr[v].vertex = newVertex;
 
     // updates number of connections
@@ -133,10 +142,6 @@ void deleteEdge(graph_t* graph, int u, int v){
 
     printf("Deleting the level %d edge (%d,%d), nontreeEdge: %d\n", rem->level, u, v, rem->nontreeEdge);
 
-    //update the number of connections
-    graph->graphArr[u].size--;
-    graph->graphArr[v].size--;
-
     /* --------- STRUCTURAL FOREST ---------*/
 
     /* CASES: TREE OR NON TREE EDGE REMOVED */
@@ -145,7 +150,15 @@ void deleteEdge(graph_t* graph, int u, int v){
     }
     else{
       //TODO: Implement delTree
+
+      delTree(graph, u, v, rem->level);
     }
+
+    //update the number of connections
+    graph->graphArr[u].size--;
+    graph->graphArr[v].size--;
+
+
 
 
 
@@ -212,6 +225,8 @@ int isConnected(graph_t* graph, int u, int v){
 /* --------- PRINTS ---------*/
 // Printing vertex connections
 void prettyPrinting(graph_t* graph) {
+  printf("\n---------------------------------------------\n");
+  printf("\n---------------------------------------------\n");
   int i;
   int size = graph->size;
   for (i = 0; i<size; i++){

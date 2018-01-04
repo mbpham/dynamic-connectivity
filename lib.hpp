@@ -11,6 +11,15 @@ struct removedEdge_t {
   int nontreeEdge;
 } ;
 
+struct tv_t {
+  int                     size      ;
+  int                     arrSize   ;
+  struct adjTreeList_t*   arr       ;
+  int *                   visited1  ;
+  int *                   visited2  ;
+  struct node_t*          node      ;
+} ;
+
 /* --------- BITMAP ---------*/
 #define BITMAP_LEN 2
 #define BYTE_LEN   8
@@ -22,6 +31,7 @@ struct vertex_t {
   int                   nontreeEdge ; //1 the connection is a nontreeEdge, 0 otherwise
   int                   level       ; //tell what level the edge has
   struct  vertex_t*     next        ; //Pointer to its connections
+  struct  node_t*       structNode  ; //Points to the structural leaf that represents the vertex
 } ;
 
 struct adjList_t {
@@ -111,6 +121,7 @@ struct localTree_t {
 
 /* ------------------ FUNCTIONS ------------------*/
 
+
 /* --------- GRAPH ---------*/
 // building the graph
 // calling initStructTree
@@ -174,13 +185,20 @@ int search(adjTreeList_t* cluster, int elem);
 
 void updateSiblings(graph_t* graph, node_t* p, node_t* tv, int level);
 void updateClusters(adjTreeList_t* pCluster, adjTreeList_t* tvCluster, int removeElem);
-void noReplacementUpdate(node_t* tv, node_t* firstCommonNode,
-  graph_t* graph, int currentLevel);
+
 
 int findReplacement(graph_t* graph, node_t* tv, node_t* tw);
+
 void updateNonTree(int u, int v, graph_t* graph);
-int graphConnected(graph_t* graph, int u, int v);
+//int graphConnected(graph_t* graph, int u, int v);
+
 struct node_t* findFirstCommon(graph_t* graph, int u, int v);
+
+void Size(tv_t* tv, node_t* x, node_t* y, int level);
+void structSearchDown(tv_t* tv, node_t* yi1, int level);
+void localSearchDown(tv_t* tv, localNode_t* currentLocal, int level);
+int visited(int vis1[], int vis2[], int seek1, int seek2, int size);
+
 
 /* --------- LOCAL TREE ---------*/
 
