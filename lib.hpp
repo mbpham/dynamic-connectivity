@@ -11,6 +11,11 @@ struct removedEdge_t {
   int nontreeEdge;
 } ;
 
+struct replacement_t{
+  int replacement;
+  int numReplacements;
+} ;
+
 struct tv_t {
   int                     size      ;
   int                     arrSize   ;
@@ -183,7 +188,7 @@ void updateSiblings(graph_t* graph, node_t* p, node_t* tv, int level);
 void updateClusters(adjTreeList_t* pCluster, adjTreeList_t* tvCluster, int removeElem);
 
 
-int findReplacement(graph_t* graph, node_t* tv, node_t* tw);
+void findReplacement(structTree_t* tree, node_t* tvNode, int level, replacement_t* rep);
 
 void updateNonTree(int u, int v, graph_t* graph);
 //int graphConnected(graph_t* graph, int u, int v);

@@ -140,38 +140,79 @@ void delTree(graph_t* graph, int u, int v, int level){
         }
         vertex = vertex->next;
       }
-      
+      //merging nodes in level i+1
       node_t* mergeNode = findLevelnode(smaller->arr[i].nodes, level+1);
 
+      if(tv!= mergeNode){
+        //merge tv and mergenode in tv
+        mergeNodes(tv, mergeNode);
+      }
+      //update single tree bitmap
+      tree(smaller->arr[i].nodes->localTree->root, level, 0);
+      tree(smaller->arr[i].nodes->localTree->root, level+1, 1);
+
+      //update all tree bitmaps in tv and to the root
+      updateBitmaps(graph->tree, smaller->arr[i].nodes->name);
+
+      //TODO: update siblings and cluster in tw
     }
-    //TODO: update tree bitmap
-
-    //TODO: merges nodes
   }
-
-
+  printf("Verices in merged node\n");
+  for(int i = 0; i<tv->n ; i++){
+    printf("%d, ", tv->cluster[i].nodes->name);
+  }
 
 
 
   //TODO: structural changes
-    //TODO: merge nodes
     //TODO: search for a replacement for (u,v) on level i
-    //TODO: CASES: if replacement found or not
-      //TODO: CASES: if i=0, i>0
+  replacement_t* rep = (struct replacement_t*) malloc(sizeof(replacement_t));
+  rep->replacement = 0;
+  rep->numReplacements = 0;
+  findReplacement(graph->tree, tv, level, rep);
+
 
 }
-
-
 
 /* --------- SEARCHES ---------*/
+/* --------- FIND REPLACEMENT EDGE ---------*/
 
-struct node_t* findLevelnode(node_t* node, int level){
-  while(node->level != level){
-    node = node->parent;
+//Find a replacement non-tree edge in level i, for tvNode
+void findReplacement(structTree_t* tree, node_t* tvNode, int level, replacement_t* rep){
+  //Check if there is a replacement yet, if so, stop
+  for(i = 1; i<tvNode->n; i++){
+    
   }
-  return node;
+
+  if(rep->replacement){
+    return;
+  }
+  else{
+    if(level == 0){
+      printf("Reached the root, there is no replacement edge\n");
+      node_t* newParent = newNode(tvNode->name);
+      newParent->level = tvNode->level-1;
+      newParent->children = tvNode;
+      newParent->localTree = initLocalTree(newParent);
+
+      tvNode->parent = newParent;
+    }
+    else{
+      findReplacement(tree, tvNode->parent, level-1, rep);
+    }
+  }
 }
 
+void structFindReplacement(){
+
+}
+
+void localFindReplacement(){
+
+}
+
+
+/* --------- SIZE PRODEDURE ---------*/
 //Finds the number of nodes connected to y in F_i \ (x,y)
 void Size(tv_t* tv, node_t* x, node_t* y, int level){
   //Seeking for y^(i+1)
@@ -279,6 +320,16 @@ int visited(int vis1[], int vis2[], int seek1, int seek2, int size){
   return 0;
 }
 
+
+/* --------- NODE SEARCHES ---------*/
+
+struct node_t* findLevelnode(node_t* node, int level){
+  while(node->level != level){
+    node = node->parent;
+  }
+  return node;
+}
+
 //Look for two vertices first common node in structural forest
 /*struct node_t* findFirstCommon(graph_t* graph, int u, int v){
   node_t* minLevelNode;
@@ -307,33 +358,6 @@ struct node_t* findMinLevelNode(graph_t* graph, int u, int v){
     return graph->tree->list[v].nodes;
   }
 };
-
-//TODO: after collecting T_v: test if a nontree edge (x,y) is a replacement edge
-//TODO: test if x^i+1 != y^i+1
-
-/*int findReplacement(graph_t* graph, node_t* tv, node_t* tw){
-  //looking at the linked list for tw
-  //and see if there is anything from the list that is connected to tv
-  vertex_t* twConnections = graph->graphArr[tw->name].vertex;
-  while (twConnections) {
-    //Look at the connections in the tw connections
-    vertex_t* posRepl = graph->graphArr[twConnections->name].vertex;
-    while(posRepl){
-      //If we find the same node in any of the connections
-      //we have found a replacement
-      if(posRepl->name == tv->name){
-        printf("findReplacement: Replacement found at %d\n", twConnections->name);
-
-        updateNonTree(posRepl->name, twConnections->name, graph);
-        return 1;
-      }
-      posRepl = posRepl->next;
-    }
-    twConnections = twConnections->next;
-  }
-  return 0;
-
-}*/
 
 //Return 1 if elem is in the cluster, return 0 otherwise
 int search(adjTreeList_t* cluster, int elem){

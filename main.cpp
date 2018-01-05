@@ -12,7 +12,8 @@ int main(int argc, char** argv){
     addEdge(a,1,3);
     deleteEdge(a,3,1);
     //deleteEdge(a,8,1);
-    //deleteEdge(a,1,5);
+    addEdge(a,1,5);
+    //addEdge(a,4,5);
     prettyPrinting(a);
 
     //addEdge(a,4,3);
