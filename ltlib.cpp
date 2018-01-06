@@ -24,8 +24,8 @@ struct localNode_t* newLocalNode(int name){
 struct localTree_t* initLocalTree(node_t* node){
   //allocate memory for local tree
   localTree_t* localTree = (struct localTree_t*) malloc(sizeof(struct localTree_t));
-  localTree->list = (struct adjLTList_t*) malloc(10* sizeof(struct adjLTList_t));
-  localTree->rankRoots = (struct adjLTList_t*) malloc(10 * sizeof(struct adjLTList_t));
+  localTree->list = (struct adjLTList_t*) malloc(100* sizeof(struct adjLTList_t));
+  localTree->rankRoots = (struct adjLTList_t*) malloc(100 * sizeof(struct adjLTList_t));
 
   //make a local node that represents the structural forest node, a.
   localNode_t* newNode = newLocalNode(node->name);
@@ -33,7 +33,7 @@ struct localTree_t* initLocalTree(node_t* node){
   newNode->belongsTo = node;
   localTree->list[0].node = newNode;
   localTree->size = 1;
-  localTree->root = localTree->list[0].node;
+  localTree->root = newNode;
   localTree->pNodes = 0;
 
   //check if there are any children
@@ -134,7 +134,7 @@ void mergeLT(localTree_t* Tu, localTree_t* Tv){
 
 // updates a local tree: sort, pair and builds rank path
 void updateLT(localTree_t* Tu){
-  printf("\n");
+  printf("ssss\n");
   //prepare localnode* array to sort by taking pNodes only
   struct localNode_t* arr[Tu->pNodes];
 
@@ -160,6 +160,7 @@ void updateLT(localTree_t* Tu){
   buildRankPath(Tu, arr);
   for(int i = 0 ; i<Tu->pNodes ; i++){
     Tu->rankRoots[i].node = arr[i];
+    Tu->rankRoots[i].node->root = Tu->root;
   }
 }
 
@@ -179,6 +180,7 @@ void addLT(localTree_t* a, node_t* b){
   newChild->rank = b->rank;
   newChild->pNode = 1;
 
+  localTree->root = a->root;
   localTree->list[0].node = newChild;
   localTree->size = 1;
   localTree->pNodes = 1;
@@ -189,38 +191,19 @@ void addLT(localTree_t* a, node_t* b){
 
 //remove a child b from a
 void delLT(localTree_t* a, node_t* b){
-  //TODO: remove the connecting path from a, use a->rankRoots, already sorted
-  //Already done
-  //TODO: remove b and its path to the rank root
+  printf("delLT: delete %d from %d local tree\n", b->name, a->root->name);
+  //remove b and its path to the rank root
   adjLTList_t* pNodes = a->rankRoots;
   localNode_t* Rb = b->parentLeaf;
-
   //find R_b
   while(Rb->pNode == 0){
     Rb = Rb->parent;
   }
 
-
-/*  while(bp->pNode == 0){
-    if(bp->parent->left == bp){
-      bp->parent->right->pNode = 1;
-      pNodes[a->pNodes].node = bp->parent->right;
-    }
-    else{
-      bp->parent->left->pNode = 1;
-      pNodes[a->pNodes].node = bp->parent->left;
-    }
-    a->pNodes++;
-    if(bp->parent->pNode == 1){
-      break;
-    }
-    bp = bp->parent;
-  }
-
   //remove rank root for b from the rank roots array
   int i = 0;
   while(1){
-    if(pNodes[i].node == bp){
+    if(pNodes[i].node == Rb){
       for(int j = i ; j<a->pNodes ; j++){
         pNodes[j].node = pNodes[j+1].node;
       }
@@ -228,10 +211,23 @@ void delLT(localTree_t* a, node_t* b){
       break;
     }
     i++;
-  }*/
+  }
+
+  updateRankRoots(a, Rb);
+  updateLT(a);
 
 }
 
+void updateRankRoots(localTree_t* tree, localNode_t* node){
+  if(!(node->left) || !(node->right)){
+    tree->rankRoots[tree->pNodes].node = node;
+    tree->pNodes++;
+    return;
+  }
+  updateRankRoots(tree, node->left);
+  updateRankRoots(tree, node->right);
+
+}
 
 
 /* --------- BITMAP UPDATES --------- */
@@ -356,11 +352,11 @@ void updateBitmaps(structTree_t* structTree, int node, int level){
 }
 
 void updateNonBitmaps(structTree_t* structTree, int node, int level){
-  printf("\nupdateNonBitmaps: Updating the bitmaps from leaf to root for %d\n", node);
+  printf("\nupdateNonBitmaps: Updating the bitmaps from leaf to root for %d, until %d\n", node, level);
 
   node_t* currentRoot = structTree->list[node].nodes;
   printBitmap(currentRoot->localTree->root->nonTree);
-  printf("Copy tree bitmap from root of %d to its parent's (level %d) leaf\n", node, currentRoot->parent->level);
+  printf("Copy Nontree bitmap from root of %d to its parent's (level %d) leaf\n", node, currentRoot->parent->level);
   localNode_t* prevLocalNode = currentRoot->localTree->root;
   localNode_t* updateNode = currentRoot->parentLeaf;
 
@@ -404,9 +400,10 @@ void updateNonBitmaps(structTree_t* structTree, int node, int level){
     if(currentRoot->level == 0){
       break;
     }
+
     prevLocalNode = currentRoot->localTree->root;
     updateNode = currentRoot->parentLeaf;
-
+    printBitmap(updateNode->tree);
     updateNode->nonTree[0] = prevLocalNode->nonTree[0];
     updateNode->nonTree[1] = prevLocalNode->nonTree[1];
 
@@ -436,19 +433,27 @@ int isEdge(unsigned char bitmap[], int level){
 //and but the local tree node pointer into one array
 void delRankPath(localTree_t* Tu, localTree_t* Tv){
   int i;
+  printf("MergeLT: Deleting rank path nodes\n");
+  printf("Size of tv %d\n", Tv->size);
   for(i = 0 ; i < Tv->size ; i++){
+    printf("ddd\n");
     if(Tv->list[i].node->name != -1){
+      printf("sssss %d\n", Tv->root->name);
       Tu->list[Tu->size].node = Tv->list[i].node;
       Tu->list[Tu->size].node->root = Tu->root;
+      printf("sssss\n");
       Tu->size++;
       if(Tv->list[i].node->pNode){
         Tu->rankRoots[Tu->pNodes].node = Tv->list[i].node;
         Tu->pNodes++;
       }
     }
+
   }
+  printf("MergeLT: Deleting rank path nodes\n");
 }
 
+//TODO: check if building correctly
 void buildRankPath(localTree_t* Tu, localNode_t* arr[]){
   printf("\nbuildRankPath: Building rank path\n");
   int i;
@@ -456,30 +461,34 @@ void buildRankPath(localTree_t* Tu, localNode_t* arr[]){
   if(Tu->pNodes == 1){
     printf("buildRankPath: there is only one rank path node %d with rank %d\n", arr[0]->name, arr[0]->rank);
     printf("buildRankPath: let it be the right child of the root: %d\n", Tu->list[0].node->name);
-    arr[0]->parent = Tu->list[0].node;
-    Tu->list[0].node->right = arr[0];
+    arr[0]->parent = Tu->root;
+    Tu->root->right = arr[0];
   }
   else{
+    printf("%d\n", Tu->root->name);
     //the amount of rank path nodes will be pNodes-1
     //since the last rpn's children both are rank roots
     printf("buildRankPath: there are more than one rank path root\n");
     printf("buildRankPath: give %d and %d a new parent, that is a rank path node\n", arr[0]->name, arr[1]->name);
     localNode_t* RPnode = newLocalNode(-1);
-    RPnode->root = arr[1]->root;
+    RPnode->root = Tu->root;
+
     arr[0]->parent = RPnode;
     arr[1]->parent = RPnode;
+
     RPnode->right = arr[0];
     RPnode->left = arr[1];
     Tu->list[Tu->size].node = RPnode;
+
     //TODO: update bitmaps for RPnode
 
     if(Tu->pNodes == 2){
-      RPnode->parent = Tu->list[0].node;
-      Tu->list[0].node->right = RPnode;
+      RPnode->parent = Tu->root;
+      Tu->root->right = RPnode;
     }
     else{
-      localNode_t* prevRPN = arr[Tu->pNodes];
-      for(i = 2; i<(Tu->pNodes)-1; i++){
+      localNode_t* prevRPN = arr[Tu->pNodes-1];
+      for(int i = 2; i<(Tu->pNodes)-1; i++){
         localNode_t* newRPN = newLocalNode(-1);
         newRPN->right = prevRPN;
         newRPN->left = arr[i];
@@ -492,8 +501,8 @@ void buildRankPath(localTree_t* Tu, localNode_t* arr[]){
 
         prevRPN = newRPN;
       }
-      prevRPN->parent = Tu->list[0].node;
-      Tu->list[0].node->right = prevRPN;
+      prevRPN->parent = Tu->root;
+      Tu->root->right = prevRPN;
     }
   }
 
@@ -502,6 +511,14 @@ void buildRankPath(localTree_t* Tu, localNode_t* arr[]){
 // search for connection
 
 /* --------- PRINTS --------- */
+
+void printCluster(structTree_t* structTree, node_t* node){
+  printf("\n");
+  for(int i = 0 ; i < node->n ; i++){
+    printf("%d ", node->cluster[i].nodes->name);
+  }
+}
+
 
 void printBitmap(unsigned char bitmap[]){
   unsigned int bit_position;

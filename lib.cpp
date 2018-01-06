@@ -45,10 +45,12 @@ void addEdge(graph_t* graph, int u, int v){
   //first check if they share the same root in structural forest
   if(graph->tree->list[u].nodes->root == graph->tree->list[v].nodes->root){
     //check if they are directly connected
+    printf("addEdge: see if %d and %d are directly connected\n", u, v);
     if(isConnected(graph, u, v)){
       printf("addEdge: The vertices are already connected\n");
     }
     else{
+      printf("addEdge: Not directly connected. Add as non-tree edge\n");
       //Add a non tree edge
       //finding first common node
       int level = findUpdateLevel(graph->tree, u, v);
@@ -120,6 +122,8 @@ void addEdge(graph_t* graph, int u, int v){
     graph->graphArr[u].size++;
     graph->graphArr[v].size++;
   }
+  printf("isConnected: size of %d is %d\n", u, graph->graphArr[u].size);
+  printf("isConnected: size of %d is %d\n", v, graph->graphArr[v].size);
 }
 
 // delete an edge
@@ -134,24 +138,26 @@ void deleteEdge(graph_t* graph, int u, int v){
     vertex_t* headu = graph->graphArr[u].vertex;
     vertex_t* headv = graph->graphArr[v].vertex;
 
-
     //deleting v from u adj list
-    removedEdge_t* rem = searchEdge(graph, headu, u, v);
-    //deleting u from v adj list
-    searchEdge(graph, headv, v, u);
+    //TODO: fix
+    removedEdge_t* remu = (struct removedEdge_t*) malloc(sizeof(removedEdge_t));
+    removedEdge_t* remv = (struct removedEdge_t*) malloc(sizeof(removedEdge_t));
 
-    printf("Deleting the level %d edge (%d,%d), nontreeEdge: %d\n", rem->level, u, v, rem->nontreeEdge);
+    searchEdge(graph, remu, headu, u, v);
+    //deleting u from v adj list
+    searchEdge(graph, remv, headv, v, u);
+
+    printf("Deleting the level %d edge (%d,%d), nontreeEdge: %d\n", remu->level, u, v, remu->nontreeEdge);
 
     /* --------- STRUCTURAL FOREST ---------*/
 
     /* CASES: TREE OR NON TREE EDGE REMOVED */
-    if(rem->nontreeEdge){
+    if(remu->nontreeEdge){
       //TODO: make updated for nontree bitmaps
     }
     else{
       //TODO: Implement delTree
-
-      delTree(graph, u, v, rem->level);
+      delTree(graph, u, v, remu->level);
     }
 
     //update the number of connections
@@ -159,47 +165,37 @@ void deleteEdge(graph_t* graph, int u, int v){
     graph->graphArr[v].size--;
 
 
-
-
-
-    //update structural forest
-    //delTree(graph, u, v);
-
-
-
   }
   else{
     printf("%d and %d are not connected. The job is done.\n", u, v);
   }
+
 }
 
 /* --------- SEARCHES --------- */
 //searches for vertices u and v in graph adj list and move pointers st they are not connected
 //returns the level of the removed edge
-struct removedEdge_t* searchEdge(graph_t* graph, vertex_t* vertex, int u, int v){
-  removedEdge_t* rem;
+void searchEdge(graph_t* graph, removedEdge_t* rem, vertex_t* vertex, int u, int v){
   if(vertex->name == v){
     graph->graphArr[u].vertex = vertex->next;
     rem->level = vertex->level;
     rem->nontreeEdge = vertex->nontreeEdge;
   }
-
   vertex_t* prev = vertex;
   vertex = vertex->next;
   while(vertex != NULL){
-    //printf("deleteEdge: Head is %d\n", vertex->name);
     if(vertex->name == v){
-      //printf("Deleting from %d: %d\n", u, vertex->name);
       prev->next = vertex->next;
-
+      int size = graph->graphArr[u].size;
       rem->level = vertex->level;
+      graph->graphArr[u].size = size;
       rem->nontreeEdge = vertex->nontreeEdge;
-      return rem;
+      return;
     }
     prev = vertex;
     vertex = vertex->next;
   }
-  return rem;
+  return;
 }
 
 // checks if two vertices are directly connected
@@ -209,6 +205,9 @@ int isConnected(graph_t* graph, int u, int v){
 
   vertex_t* checkU = graph->graphArr[u].vertex;
   vertex_t* checkV = graph->graphArr[v].vertex;
+  printf("isConnected: size of %d is %d\n", u, graph->graphArr[u].size);
+  printf("isConnected: size of %d is %d\n", v, graph->graphArr[v].size);
+
   for(i = 0; i<minSize; i++){
     if(checkU->name == v || checkV->name == u){
       return 1;
@@ -216,6 +215,19 @@ int isConnected(graph_t* graph, int u, int v){
     checkU = checkU->next;
     checkV = checkV->next;
   }
+  return 0;
+}
+
+
+int treeConnected(structTree_t* tree, int u, int v){
+  printf("\n----------------------------------------------------- \n");
+  node_t* rootu = tree->list[u].nodes->root;
+  node_t* rootv = tree->list[v].nodes->root;
+  if(rootv == rootu){
+    printf("treeConnected: %d and %d are connected\n", u, v);
+    return 1;
+  }
+  printf("treeConnected: %d and %d are not connected\n", u, v);
   return 0;
 }
 

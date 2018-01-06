@@ -1,8 +1,6 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <set>
-
 #include <iterator>
 using namespace std;
 
@@ -25,6 +23,7 @@ struct tv_t {
   int *                   visited1  ;
   int *                   visited2  ;
   struct node_t*          node      ;
+  struct node_t*          visited   ;
 } ;
 
 /* --------- BITMAP ---------*/
@@ -122,7 +121,7 @@ struct localTree_t {
   struct adjLTList_t*   list        ; //the array of local nodes
   int                   build       ; //tell if the tree is finished building when paring
   struct localNode_t*   root        ; //points to the root of the local tree
-  //struct adjLTList_t*   rankRoots   ;
+  struct adjLTList_t*   rankRoots   ;
   int                   roots       ; //defines the number og nodes that are directly connected to the rank path
   int                   pNodes      ; //the number of rank nodes that are a direct children to path nodes
 } ;
@@ -149,7 +148,7 @@ void deleteEdge(graph_t* graph, vertex_t v, vertex_t u);
 
 // searches for the connection (u,v) and remove connection
 // TODO: split the function such that we have a search function and a remove function
-struct removedEdge_t* searchEdge(graph_t* graph, vertex_t* vertex, int u, int v);
+void searchEdge(graph_t* graph, removedEdge_t* rem, vertex_t* vertex, int u, int v);
 
 // check if two vertices are connected
 int isConnected(graph_t* graph, int u, int v);
@@ -158,6 +157,8 @@ int isConnected(graph_t* graph, int u, int v);
 // makes a new node for the structural tree and initializes the values
 // also points to a vertex in the leaves
 struct node_t* newNode(int name);
+
+void leafToRoot(node_t* u);
 
 int findUpdateLevel(structTree_t* structTree, int u, int v);
 
@@ -173,15 +174,12 @@ struct structTree_t* initStructTree(graph_t* graph);
 void mergeNodes(node_t* a, node_t* b);
 
 // called from addEdge. Updates.
-//
 void addTree(graph_t* graph, int u, int v);
 
 void delTree(graph_t* graph, int u, int v, int level);
 
 // replace
 void replace(graph_t graph);
-
-void Clusters(struct node_t* node);
 
 int isConnected(graph_t* graph, int u, int v);
 
@@ -191,12 +189,10 @@ void updateSiblings(graph_t* graph, node_t* p, node_t* tv, int level);
 void updateClusters(adjTreeList_t* pCluster, adjTreeList_t* tvCluster, int removeElem);
 
 
-void findReplacement(structTree_t* tree, node_t* tvNode, node_t* twNode, int level, replacement_t* rep);
+void findReplacement(graph_t* graph, int u, int v, node_t* tvNode, node_t* twNode, int level, replacement_t* rep);
 
 void updateNonTree(int u, int v, graph_t* graph);
 //int graphConnected(graph_t* graph, int u, int v);
-
-struct node_t* findFirstCommon(graph_t* graph, int u, int v);
 
 void Size(tv_t* tv, node_t* x, node_t* y, int level);
 void structSearchDown(tv_t* tv, node_t* yi1, int level);
@@ -238,7 +234,7 @@ void pairNodes(localTree_t* Tu, localNode_t* arr[]);
 
 void delRankPath(localTree_t* Tu, localTree_t* Tv);
 void buildRankPath(localTree_t* Tu, localNode_t* arr[]);
-
+void updateRankRoots(localTree_t* tree, localNode_t* node);
 
 //bitmap updates
 void updateNonBitmaps(structTree_t* structTree, int node, int level);
