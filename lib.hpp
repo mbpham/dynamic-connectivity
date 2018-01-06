@@ -14,6 +14,8 @@ struct removedEdge_t {
 struct replacement_t{
   int replacement;
   int numReplacements;
+  int replacementNodeu;
+  int replacementNodev;
 } ;
 
 struct tv_t {
@@ -120,6 +122,7 @@ struct localTree_t {
   struct adjLTList_t*   list        ; //the array of local nodes
   int                   build       ; //tell if the tree is finished building when paring
   struct localNode_t*   root        ; //points to the root of the local tree
+  //struct adjLTList_t*   rankRoots   ;
   int                   roots       ; //defines the number og nodes that are directly connected to the rank path
   int                   pNodes      ; //the number of rank nodes that are a direct children to path nodes
 } ;
@@ -188,7 +191,7 @@ void updateSiblings(graph_t* graph, node_t* p, node_t* tv, int level);
 void updateClusters(adjTreeList_t* pCluster, adjTreeList_t* tvCluster, int removeElem);
 
 
-void findReplacement(structTree_t* tree, node_t* tvNode, int level, replacement_t* rep);
+void findReplacement(structTree_t* tree, node_t* tvNode, node_t* twNode, int level, replacement_t* rep);
 
 void updateNonTree(int u, int v, graph_t* graph);
 //int graphConnected(graph_t* graph, int u, int v);
@@ -201,7 +204,10 @@ void localSearchDown(tv_t* tv, localNode_t* currentLocal, int level);
 int visited(int vis1[], int vis2[], int seek1, int seek2, int size);
 struct tv_t* initTv();
 struct node_t* findLevelnode(node_t* node, int level);
-
+void checkNonTreeEdges(node_t* tvNode, replacement_t* rep, int level);
+void splitCluster(node_t* tv, node_t* parent);
+void splitNodes(node_t* tv, node_t* parent);
+void removeSibling(node_t* tv, node_t* parent);
 /* --------- LOCAL TREE ---------*/
 
 void printBitmap(unsigned char bitmap[]);
@@ -211,6 +217,7 @@ void byte_as_bits(char bitmap);
 struct node_t* findMinLevelNode(graph_t* graph, int u, int v);
 
 void addLT(localTree_t* a, node_t* b);
+void delLT(localTree_t* a, node_t* b);
 
 // initializes local tree
 struct localTree_t* initLocalTree(node_t* node);
@@ -234,7 +241,7 @@ void buildRankPath(localTree_t* Tu, localNode_t* arr[]);
 
 
 //bitmap updates
-void updateNonBitmaps(structTree_t* structTree, int node);
-void updateBitmaps(structTree_t* structTree, int node);
+void updateNonBitmaps(structTree_t* structTree, int node, int level);
+void updateBitmaps(structTree_t* structTree, int node, int level);
 void nonbitWiseAND(localNode_t* a, localNode_t* b, localNode_t* newNode);
 void nonbitWiseOR(localNode_t* a, localNode_t* b, localNode_t* newNode);

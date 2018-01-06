@@ -25,6 +25,7 @@ struct localTree_t* initLocalTree(node_t* node){
   //allocate memory for local tree
   localTree_t* localTree = (struct localTree_t*) malloc(sizeof(struct localTree_t));
   localTree->list = (struct adjLTList_t*) malloc(10* sizeof(struct adjLTList_t));
+  localTree->rankRoots = (struct adjLTList_t*) malloc(10 * sizeof(struct adjLTList_t));
 
   //make a local node that represents the structural forest node, a.
   localNode_t* newNode = newLocalNode(node->name);
@@ -44,6 +45,7 @@ struct localTree_t* initLocalTree(node_t* node){
     newChild->rank = node->children->rank;
     newNode->right = newChild;
     newChild->pNode = 1;
+    localTree->rankRoots[0].node = newChild;
     newChild->parent = newNode;
     localTree->list[1].node = newChild;
     localTree->size++;
@@ -65,6 +67,7 @@ void pairNodes(localTree_t* Tu, localNode_t* arr[]){
   int size = Tu->pNodes-1;
   for(i = size; i>0; i--){
     //The two nodes have equal ranks, pair.
+    printf("%d rank %d, %d rank %d\n", arr[i]->name, arr[i]->rank, arr[i-1]->name, arr[i-1]->rank);
     if(arr[i]->rank == arr[i-1]->rank){
       printf("pairNodes: paring nodes %d and %d with rank %d\n", arr[i-1]->name, arr[i]->name, arr[i]->rank);
       //make a new node
@@ -133,16 +136,12 @@ void mergeLT(localTree_t* Tu, localTree_t* Tv){
 void updateLT(localTree_t* Tu){
   printf("\n");
   //prepare localnode* array to sort by taking pNodes only
-  int i;
-  int j = 0;
   struct localNode_t* arr[Tu->pNodes];
-  //printf("\nupdateLT: pNodes of %d: %d\n", Tu->list[0].node->name, Tu->pNodes);
-  for(i = 1; i < Tu->size; i++){
-    if(Tu->list[i].node->pNode){
-      arr[j] = Tu->list[i].node;
-      printf("UpdateLT: Inserting %d with rank %d to array\n", arr[j]->name, arr[j]->rank);
-      j++;
-    }
+
+  for(int i = 0; i < Tu->pNodes; i++){
+    arr[i] = Tu->rankRoots[i].node;
+    printf("UpdateLT: Inserting %d with rank %d to array\n", arr[i]->name, arr[i]->rank);
+
   }
 
   //sort array by rank
@@ -156,12 +155,12 @@ void updateLT(localTree_t* Tu){
     printf("\nUpdateLT: Paired succesfully\n");
   }
 
-
   //the paring is finished arr
   //arr only contains nodes with unique ranks
   buildRankPath(Tu, arr);
-
-
+  for(int i = 0 ; i<Tu->pNodes ; i++){
+    Tu->rankRoots[i].node = arr[i];
+  }
 }
 
 /* --------- UPDATES AFTER INSERTION OR DELETION --------- */
@@ -189,7 +188,48 @@ void addLT(localTree_t* a, node_t* b){
 }
 
 //remove a child b from a
-void delLT(){
+void delLT(localTree_t* a, node_t* b){
+  //TODO: remove the connecting path from a, use a->rankRoots, already sorted
+  //Already done
+  //TODO: remove b and its path to the rank root
+  adjLTList_t* pNodes = a->rankRoots;
+  localNode_t* Rb = b->parentLeaf;
+
+  //find R_b
+  while(Rb->pNode == 0){
+    Rb = Rb->parent;
+  }
+
+
+/*  while(bp->pNode == 0){
+    if(bp->parent->left == bp){
+      bp->parent->right->pNode = 1;
+      pNodes[a->pNodes].node = bp->parent->right;
+    }
+    else{
+      bp->parent->left->pNode = 1;
+      pNodes[a->pNodes].node = bp->parent->left;
+    }
+    a->pNodes++;
+    if(bp->parent->pNode == 1){
+      break;
+    }
+    bp = bp->parent;
+  }
+
+  //remove rank root for b from the rank roots array
+  int i = 0;
+  while(1){
+    if(pNodes[i].node == bp){
+      for(int j = i ; j<a->pNodes ; j++){
+        pNodes[j].node = pNodes[j+1].node;
+      }
+      a->pNodes--;
+      break;
+    }
+    i++;
+  }*/
+
 }
 
 
@@ -257,7 +297,7 @@ void nonbitWiseAND(localNode_t* a, localNode_t* b, localNode_t* newNode){
 
 //update anscestors for the tree or non tree bitmap
 //"node" is the index of the leaf in the structural tree
-void updateBitmaps(structTree_t* structTree, int node){
+void updateBitmaps(structTree_t* structTree, int node, int level){
   printf("\nupdateBitmaps: Updating the bitmaps from leaf to root for %d\n", node);
 
   node_t* currentRoot = structTree->list[node].nodes;
@@ -271,7 +311,7 @@ void updateBitmaps(structTree_t* structTree, int node){
 
   currentRoot = currentRoot->parent;
   //run through the structural forest starting from parent of leaf in structural tree
-  while(currentRoot){
+  while(currentRoot->level != level){
     printf("\nupdateBitmaps: Run through local node for %d level %d \n", currentRoot->name, currentRoot->level);
 
 
@@ -315,7 +355,7 @@ void updateBitmaps(structTree_t* structTree, int node){
   printf("updateBitmaps: bitmaps successfully updated\n");
 }
 
-void updateNonBitmaps(structTree_t* structTree, int node){
+void updateNonBitmaps(structTree_t* structTree, int node, int level){
   printf("\nupdateNonBitmaps: Updating the bitmaps from leaf to root for %d\n", node);
 
   node_t* currentRoot = structTree->list[node].nodes;
@@ -331,7 +371,7 @@ void updateNonBitmaps(structTree_t* structTree, int node){
 
   currentRoot = currentRoot->parent;
   //run through the structural forest starting from parent of leaf in structural tree
-  while(currentRoot){
+  while(currentRoot->level != level){
     printf("\nupdateNonBitmaps: Run through local node for %d level %d \n", currentRoot->name, currentRoot->level);
 
 
@@ -402,6 +442,7 @@ void delRankPath(localTree_t* Tu, localTree_t* Tv){
       Tu->list[Tu->size].node->root = Tu->root;
       Tu->size++;
       if(Tv->list[i].node->pNode){
+        Tu->rankRoots[Tu->pNodes].node = Tv->list[i].node;
         Tu->pNodes++;
       }
     }

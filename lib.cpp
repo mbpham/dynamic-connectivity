@@ -58,8 +58,8 @@ void addEdge(graph_t* graph, int u, int v){
       nonTree(graph->tree->list[u].nodes->localTree->root, level, 1);
       nonTree(graph->tree->list[v].nodes->localTree->root, level, 1);
 
-      updateNonBitmaps(graph->tree, u);
-      updateNonBitmaps(graph->tree, v);
+      updateNonBitmaps(graph->tree, u, 0);
+      updateNonBitmaps(graph->tree, v, 0);
 
       /* --------- ADD TO THE GRAPH ARRAY ---------*/
       // connection from u to v
