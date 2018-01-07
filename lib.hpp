@@ -152,6 +152,7 @@ void searchEdge(graph_t* graph, removedEdge_t* rem, vertex_t* vertex, int u, int
 
 // check if two vertices are connected
 int isConnected(graph_t* graph, int u, int v);
+int countNonTreeEdges(graph_t* graph, int vertexIndex, int level);
 
 /* --------- STRUCTURAL TREE ---------*/
 // makes a new node for the structural tree and initializes the values
@@ -234,7 +235,7 @@ void pairNodes(localTree_t* Tu, localNode_t* arr[]);
 
 void delRankPath(localTree_t* Tu, localTree_t* Tv);
 void buildRankPath(localTree_t* Tu, localNode_t* arr[]);
-void updateRankRoots(localTree_t* tree, localNode_t* node);
+void updateRankRoots(localTree_t* tree, localNode_t* node, localNode_t* rem);
 
 //bitmap updates
 void updateNonBitmaps(structTree_t* structTree, int node, int level);

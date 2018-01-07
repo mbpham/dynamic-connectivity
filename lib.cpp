@@ -39,7 +39,7 @@ struct graph_t* makeGraph(int size){
 void addEdge(graph_t* graph, int u, int v){
   printf("\n---------------------------------------------\n");
   printf("\n---------------------------------------------\n");
-  printf("\nInserting edge (%d, %d)\n", u, v);
+  printf("\nInserting edge (%d, %d), roots are %d and %d\n", u, v, graph->tree->list[u].nodes->root->name, graph->tree->list[v].nodes->root->name);
 
   /*--------- CASES FOR STRUCTURAL FOREST ---------*/
   //first check if they share the same root in structural forest
@@ -94,6 +94,7 @@ void addEdge(graph_t* graph, int u, int v){
   }
   //if they are not connected, connect and update structural forest
   else{
+    printf("addEdge: not connected. Merge roots.\n");
     // Updates structural tree
     addTree(graph, u, v);
 
@@ -153,7 +154,20 @@ void deleteEdge(graph_t* graph, int u, int v){
 
     /* CASES: TREE OR NON TREE EDGE REMOVED */
     if(remu->nontreeEdge){
-      //TODO: make updated for nontree bitmaps
+      //TODO: make updates for nontree bitmaps
+      //count non tree edges
+      if(!countNonTreeEdges(graph, u, remu->level)){
+        printf("deleteEdge: There are no more non-tree edges for %d level %d. Update non-tree bitmap\n", u, remu->level);
+        nonTree(graph->tree->list[u].nodes->localTree->root, remu->level,0);
+        updateNonBitmaps(graph->tree, u, 0);
+      }
+      if(!countNonTreeEdges(graph, v, remv->level)){
+        printf("deleteEdge: There are no more non-tree edges for %d level %d. Update non-tree bitmap\n", v, remv->level);
+        nonTree(graph->tree->list[v].nodes->localTree->root, remv->level,0);
+        updateNonBitmaps(graph->tree, v, 0);
+      }
+
+
     }
     else{
       //TODO: Implement delTree
@@ -218,6 +232,17 @@ int isConnected(graph_t* graph, int u, int v){
   return 0;
 }
 
+int countNonTreeEdges(graph_t* graph, int vertexIndex, int level){
+  vertex_t* nexts = graph->graphArr[vertexIndex].vertex;
+  while(nexts){
+    if((nexts->nontreeEdge == 1)||(nexts->level == 1)){
+      return 1;
+    }
+    nexts = nexts->next;
+  }
+  return 0;
+}
+
 
 int treeConnected(structTree_t* tree, int u, int v){
   printf("\n----------------------------------------------------- \n");
@@ -230,9 +255,6 @@ int treeConnected(structTree_t* tree, int u, int v){
   printf("treeConnected: %d and %d are not connected\n", u, v);
   return 0;
 }
-
-/* --------- UPDATES --------- */
-
 
 /* --------- PRINTS ---------*/
 // Printing vertex connections

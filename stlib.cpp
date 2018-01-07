@@ -136,9 +136,11 @@ void delTree(graph_t* graph, int u, int v, int level){
   else{
     //increase all level i edges in smaller tree by 1
     printf("delTree: merging siblings to Tv\n");
+    //TODO: remember to update the siblings. Remove mergenode as sibling to larger tree
     for(int i = 0 ; i < (smaller->size) ; i++){
 
       vertex_t* vertex = smaller->arr[i].nodes->to;
+      //Increasing level of edge in the graph list
       while (vertex) {
         if(vertex->level == level && vertex->nontreeEdge != 1){
           vertex->level++;
@@ -151,20 +153,54 @@ void delTree(graph_t* graph, int u, int v, int level){
       if(tv!= mergeNode){
         //merge tv and mergenode in tv
         mergeNodes(tv, mergeNode);
+        //remove mergenode as sibling to tw
+        node_t* twSiblings = tw->parent->children;
+        if(twSiblings == mergeNode){
+          twSiblings->parent->children = twSiblings->sibling;
+          twSiblings->sibling = NULL;
+        }
+        else{
+          node_t* prev = twSiblings;
+          twSiblings = twSiblings->sibling;
+          while(twSiblings){
+            if(twSiblings == mergeNode){
+              if(twSiblings->sibling){
+                prev->sibling = twSiblings->sibling;
+                twSiblings->sibling = NULL;
+              }
+              else{
+                prev->sibling = NULL;
+                prev->parent->children->last = prev;
+                twSiblings->sibling = NULL;
+              }
+              break;
+            }
+            twSiblings = twSiblings->sibling;
+          }
+        }
+
         for(int j = 0 ; j<mergeNode->n ; j++){
           mergeNode->cluster[j].nodes->root = tv->root;
         }
+
+        //update localtree for tw
+        delLT(tw->parent->localTree, mergeNode);
+
+        printCluster(tw->parent);
+
       }
+
       //update single tree bitmap
       tree(smaller->arr[i].nodes->localTree->root, level, 0);
       tree(smaller->arr[i].nodes->localTree->root, level+1, 1);
       //update all tree bitmaps in tv and to the root
       updateBitmaps(graph->tree, smaller->arr[i].nodes->name, level);
-
+      printf("tree bitmap for %d level %d\n", smaller->arr[i].nodes->root->name, smaller->arr[i].nodes->root->level);
+      printBitmap(smaller->arr[i].nodes->root->localTree->root->tree);
     }
   }
 
-
+  printSiblings(tv->parent);
   //structural changes
     //search for a replacement for (u,v) on level i
   replacement_t* rep = (struct replacement_t*) malloc(sizeof(replacement_t));
@@ -172,8 +208,11 @@ void delTree(graph_t* graph, int u, int v, int level){
   rep->numReplacements = 0;
   printf("\ndeleteEdge: Looking for a replacement at level %d\n", level);
   findReplacement(graph, u, v, tv, tw, level, rep);
-  leafToRoot(graph->tree->list[u].nodes);
-  leafToRoot(graph->tree->list[v].nodes);
+
+  printCluster(graph->tree->list[u].nodes->root);
+  //leafToRoot(graph->tree->list[u].nodes);
+  //leafToRoot(graph->tree->list[v].nodes);
+  printCluster(graph->tree->list[u].nodes->root);
   printf("Root of %d and %d are %d, level %d and %d, level %d\n", u,v,graph->tree->list[u].nodes->root->name, graph->tree->list[u].nodes->root->level, graph->tree->list[v].nodes->root->name, graph->tree->list[v].nodes->root->level);
 
 
@@ -184,12 +223,15 @@ void delTree(graph_t* graph, int u, int v, int level){
 
 //Find a replacement non-tree edge in level i, for tvNode
 void findReplacement(graph_t* graph, int u, int v, node_t* tvNode, node_t* twNode, int level, replacement_t* rep){
-  printf("findReplacement: looking for a replacement edge");
+  printf("findReplacement: looking for a replacement edge\n");
+  //TODO: fix something with n
   //Check if there is a replacement yet, if so, stop
   for(int i = 0; i<tvNode->n; i++){
+    printf("findReplacement: running checkNonTreeEdges on %d\n", tvNode->cluster[i].nodes->name);
     //Check in the tv cluster whether or not there is a nontree edge
     checkNonTreeEdges(tvNode->cluster[i].nodes, rep, level);
   }
+
 
   //If a replacement edge is found, we may or may not have to update the bitmaps
   if(rep->replacement){
@@ -199,8 +241,9 @@ void findReplacement(graph_t* graph, int u, int v, node_t* tvNode, node_t* twNod
     updateBitmaps(graph->tree, rep->replacementNodeu, level+1);
     tree(graph->tree->list[rep->replacementNodev].nodes->localTree->root, level, 1);
     updateBitmaps(graph->tree, rep->replacementNodev, level+1);
-    twNode->parent = tvNode->parent;
-    //TODO: update in graph
+    tvNode->parent = twNode->parent;
+    addLT(twNode->parent->localTree, tvNode);
+    //TODO: update local tree
 
     vertex_t* Gupdatev = graph->tree->list[rep->replacementNodeu].nodes->to;
     vertex_t* Gupdateu = graph->tree->list[rep->replacementNodev].nodes->to;
@@ -235,44 +278,59 @@ void findReplacement(graph_t* graph, int u, int v, node_t* tvNode, node_t* twNod
   }
 
   if(level == 0){
+    printf("findReplacement: There are no replacement edges and we have reached level 0\n");
     node_t* newParent = newNode(tvNode->name);
     newParent->cluster = tvNode->cluster;
-    printf("CLUUUUSTER %d\n", newParent->cluster[0].nodes->name);
-    newParent->level = tvNode->level-1;
     newParent->n = tvNode->n;
-    printf("cluster size of new parent is%d\n", newParent->n);
+    newParent->level = tvNode->level-1;
     newParent->children = tvNode;
     newParent->localTree = initLocalTree(newParent);
+    tvNode->parent = newParent;
+    printSiblings(twNode->parent);
+
     splitNodes(tvNode, twNode->parent);
+    printCluster(tvNode);
 
     //update roots of leaves in tv
     for(int i = 0 ; i<(tvNode->n) ; i++){
-      tvNode->cluster[i].nodes->root = newParent;
+      newParent->cluster[i].nodes->root = newParent;
     }
-    tvNode->parent = newParent;
     return;
   }
   else{
     printf("findReplacement: Moving to level %d\n", level-1);
+    printf("findReplacement: Making a new parent for %d: %d level %d\n", tvNode->name, tvNode->name, tvNode->level-1);
     node_t* newParent = newNode(tvNode->name);
-    newParent->cluster = tvNode->cluster;
-    newParent->level = level;
+    newParent->level = tvNode->level-1;
     printf("parents level is %d\n", newParent->level);
     newParent->children = tvNode;
 
-    newParent->localTree = initLocalTree(newParent);
+    //TODO: what does the local tree look like?
+
+
+
     newParent->root = newParent;
-    updateBitmaps(graph->tree, u, level-1);
-    updateBitmaps(graph->tree, v, level-1);
-    updateNonBitmaps(graph->tree, u, level-1);
-    updateNonBitmaps(graph->tree, v, level-1);
-    printf("Tree bitmap for new parent is\n");
-    printBitmap(tvNode->localTree->root->tree);
-    printBitmap(newParent->localTree->root->tree);
-    splitNodes(tvNode, twNode->parent);
     tvNode->parent = newParent;
+
+    //printBitmap(newParent->localTree->root->tree);
+
+    //Split tv parent
+
+    newParent->cluster = tvNode->cluster;
+    newParent->n = tvNode->n;
+    printCluster(tvNode);
+    printCluster(newParent);
+    splitNodes(tvNode, twNode->parent);
+
+    newParent->localTree = initLocalTree(newParent);
+    //TODO: figure out why we are updating the bitmaps
+    updateBitmaps(graph->tree, u, newParent->level);
+    updateBitmaps(graph->tree, v, newParent->level);
+    updateNonBitmaps(graph->tree, u, newParent->level);
+    updateNonBitmaps(graph->tree, v, newParent->level);
     printf("findReplacement: calling delTree on level %d\n", level-1);
     //Call delTree recursively on level i-1
+
     delTree(graph, u, v, level-1);
 
   }
@@ -290,27 +348,33 @@ void checkNonTreeEdges(node_t* tvNode, replacement_t* rep, int level){
       if(vertex->level == level && vertex->nontreeEdge == 1){
         node_t* xi1 = findLevelnode(vertex->structNode, level+1);
         node_t* yi1 = findLevelnode(tvNode, level+1);
+        printf("xi1: %d, level %d\n", xi1->name, xi1->level);
+        printf("yi1: %d, level %d\n", yi1->name, yi1->level);
 
         //Check if x^(i+1) != y^(i+1). If so, we have found a replacement
         if(xi1 != yi1){
           printf("checkNonTreeEdges: replacement edge on level %d found\n", level);
           //saving the replacement edge for later updates
+
           if(!rep->replacement){
             rep->replacementNodeu = tvNode->name;
             rep->replacementNodev = vertex->name;
           }
           rep->replacement = 1;
           rep->numReplacements++;
-
+          printf("Number of replacements %d\n", rep->numReplacements);
+          if(rep->numReplacements>1){
+            return;
+          }
           //if we have found more than one replacement edge,
           //we dont need more information. break out of while loop
-          if(rep->numReplacements>1){
-            break;
-          }
+
         }
+
         else{
           printf("checkNonTreeEdges: The vertices are already connected and is not a replacement\n");
         }
+
       }
       vertex = vertex->next;
     }
@@ -322,49 +386,58 @@ void checkNonTreeEdges(node_t* tvNode, replacement_t* rep, int level){
 
 void splitNodes(node_t* tv, node_t* parent){
   printf("\nsplitNodes: there is no replacement at level %d. Make a new parent for tv\n", tv->level);
-  node_t* newParent = newNode(tv->name);
+  /*node_t* newParent = newNode(tv->name);
   newParent->cluster = tv->cluster;
   newParent->level = tv->level-1;
   newParent->children = tv;
-  newParent->localTree = initLocalTree(newParent);
+  newParent->localTree = initLocalTree(newParent);*/
 
   //TODO: update tw->parent cluster and siblings
   //updates the cluster for tw->parent since tv is not a child to it
   splitCluster(tv, parent);
   removeSibling(tv, parent);
-  delLT(parent->localTree, tv);
+  //delLT(parent->localTree, tv);
 
-  if(newParent->level > 0){
-    newParent->parent = parent->parent;
-    parent->children->last->sibling = newParent;
-    parent->children->last = newParent;
+  if(tv->parent->level > 0){
+    tv->parent->parent = parent->parent;
+    parent->children->last->sibling = tv->parent;
+    parent->children->last = tv->parent;
 
   }
 
-  tv->parent = newParent;
+
 }
 
 void splitCluster(node_t* tv, node_t* parent){
-  printf("splitCluster: splitting the cluster\n");
+  printf("\nsplitCluster: splitting the cluster, size of %d cluster is %d\n", tv->name, tv->n);
   int count = tv->n;
   int clusterIndex = 0;
   while(count>0){
+    //printCluster(tv);
     if(search(tv->cluster, parent->cluster[clusterIndex].nodes->name)){
-      parent->cluster[clusterIndex].nodes->root = tv->root;
-      printf("splitCluster: remove %d from %d\n", parent->cluster[clusterIndex].nodes->name, parent->name);
-      for(int i = clusterIndex ; i<parent->n ; i++){
-         parent->cluster[clusterIndex] = parent->cluster[clusterIndex+1];
+      printf("Found a duplicate. Remove %d from %d, level %d\n", parent->cluster[clusterIndex].nodes->name, parent->name, parent->level);
+      //found a value that is in tv. Remove it from parent
+      int i = clusterIndex;
+      while(parent->cluster[i].nodes != NULL){
+        parent->cluster[i].nodes = parent->cluster[i+1].nodes;
+        i++;
       }
-      parent->n --;
       count--;
+      parent->n--;
+      clusterIndex--;
+      //printCluster(tv);
+      //printCluster(tv->parent);
+
+      //printCluster(parent);
     }
+    //move to the next index
     clusterIndex++;
   }
-
 }
 
+
 void removeSibling(node_t* tv, node_t* parent){
-  printf("removeSibling: remove %d as sibling to tw\n", tv->name);
+  printf("\nremoveSibling: remove %d as sibling to tw\n", tv->name);
   node_t* siblings = parent->children;
   node_t* prev;
   //TODO: fix this
@@ -382,6 +455,7 @@ void removeSibling(node_t* tv, node_t* parent){
     printf("removeSibling: searching further for %d\n", tv->name);
     if(siblings == tv){
       printf("removeSibling: found %d\n", tv->name);
+      delLT(parent->localTree, tv);
       if(siblings->sibling){
         prev->sibling = siblings->sibling;
       }
@@ -390,11 +464,13 @@ void removeSibling(node_t* tv, node_t* parent){
       }
 
       tv->sibling = NULL;
+
     }
     prev = siblings;
     siblings = siblings->sibling;
   }
-
+  printSiblings(parent);
+  printSiblings(tv->parent);
 
 }
 
@@ -402,24 +478,25 @@ void removeSibling(node_t* tv, node_t* parent){
 /* --------- SIZE PRODEDURE ---------*/
 //Finds the number of nodes connected to y in F_i \ (x,y)
 void Size(tv_t* tv, node_t* x, node_t* y, int level){
-  printf("\nSize: searching down %d, level %d\n", y->name, y->level);
+  //printf("\nSize: searching down %d, level %d\n", y->name, y->level);
   //Seeking for y^(i+1)
   //Insert (x,y) to list of visited edges
-  printf("visited array size %d\n", tv->arrSize);
+  //printf("visited array size %d\n", tv->arrSize);
   tv->visited1[tv->arrSize] = x->name;
   tv->visited2[tv->arrSize] = y->name;
-  printf("Size: searching for y^(i+1)\n");
+  //printf("Size: searching for y^(i+1)\n");
 
   node_t* yi1 = y;
   while(yi1->level != level+1){
-    printf("%d\n", yi1->level);
+    //printf("Level%d\n", yi1->level);
     yi1 = yi1->parent;
   }
-
+  printf("\nSize: y(i+1) found: %d, level %d\n", yi1->name, yi1->level);
+  printCluster(yi1);
 
   if(tv->visited == NULL){
     tv->visited = yi1;
-    printf("y^(i+1) is :%d\n", tv->visited->name);
+    //printf("y^(i+1) is :%d\n", tv->visited->name);
     tv->size = tv->size + yi1->n;
   }
   else if(tv->visited != yi1){
@@ -438,7 +515,7 @@ void Size(tv_t* tv, node_t* x, node_t* y, int level){
 
 //searchDown the structural nodes
 void structSearchDown(tv_t* tv, node_t* yi1, int level){
-    printf("structSearchDown: searching in structural nodes, %d\n", yi1->level);
+    //printf("structSearchDown: searching in structural nodes, %d\n", yi1->level);
     localNode_t* currentLocal = yi1->localTree->root;
 
     //Check if the local node rooted in yi1 has an incident tree edge in level i
@@ -451,14 +528,14 @@ void structSearchDown(tv_t* tv, node_t* yi1, int level){
         tv->arr[tv->arrSize].nodes = yi1;
         tv->arrSize++;
 
-        printf("structSearchDown: search for connections\n");
+        //printf("structSearchDown: search for connections\n");
         vertex_t* connections = yi1->to;
         while(connections){
-          printf("structSearchDown: found a connection (%d,%d) \n", yi1->name, connections->name);
+          //printf("structSearchDown: found a connection (%d,%d) \n", yi1->name, connections->name);
           //recursive call to Size for each level i edge !(x,y)
           if(!(visited(tv->visited1, tv->visited2, yi1->name, connections->name, tv->arrSize))) {
             if(connections->level == level && connections->nontreeEdge == 0){
-              printf("structSearchDown: edge (%d,%d) has not been visited, call size.\n", yi1->name, connections->name);
+              //printf("structSearchDown: edge (%d,%d) has not been visited, call size.\n", yi1->name, connections->name);
               Size(tv, yi1, connections->structNode, level);
             }
             else{
@@ -562,16 +639,19 @@ int findUpdateLevel(structTree_t* structTree, int u, int v){
 /* --------- UPDATES ---------*/
 
 void leafToRoot(node_t* u){
-  struct node_t* parents = u;
+  for(int i = 0 ; i<u->n; i++){
+    u->cluster[i].nodes->root = u;
+  }
+  /*struct node_t* parents = u;
   while(1){
     printf("%d, %d\n", parents->name, parents->level);
     if(parents->level == 0){
+
       break;
     }
     parents = parents->parent;
   }
-  u->root = parents;
-  printf("%d\n", u->root->name);
+  u->root = parents;*/
 }
 
 //removes nontree edges and add them as tree edges
@@ -599,6 +679,7 @@ void updateNonTree(int u, int v, graph_t* graph){
 
 void updateRoot(node_t* newRoot, node_t* delRoot){
   node_t* child = delRoot;
+  //printf("test\n");
   while(child){
     child->root = newRoot;
     updateRoot(newRoot, child->sibling);
@@ -611,22 +692,24 @@ void updateRoot(node_t* newRoot, node_t* delRoot){
 void mergeNodes(node_t* a, node_t* b){
   printf("mergeNodes: Merging %d and %d in %d\n", a->name, b->name, a->name);
   struct node_t* child = b->children;
+
   //make the last child of a be a sibling to first child of b
   a->children->last->sibling = b->children;
   a->children->last = b->children->last;
-
+  //printf("test\n");
   //update root pointer
   updateRoot(a, b);
-
+  //printf("test\n");
   //make each child of b be a child of a
   printf("%d\n", a->localTree->root->name);
   while(child){
-    printf("child of %d, %d\n", b->name, child->name);
+    //printf("child of %d, %d\n", b->name, child->name);
     a->size = a->size +1;
     child->parent = a;
     addLT(a->localTree, child);
     child = child->sibling;
   }
+
 
   //Updates the number of descending leaves
   a->n = a->n + b->n;
@@ -640,11 +723,12 @@ void mergeNodes(node_t* a, node_t* b){
     a->cluster->size++;
   }
 
-  for(int i = 0 ; i<b->size ; i++){
-    printf("CLUSTER dnedjnejkndkje %d\n", b->cluster[i].nodes->name);
+
+  for(int i = 0 ; i<b->n ; i++){
     b->cluster[i].nodes->root = a;
   }
 
-  b = NULL;
 
+  b = NULL;
+  printf("ddd\n");
 }
