@@ -10,7 +10,6 @@ using namespace std;
 int comp(const void *p, const void *q){
     struct localNode_t* l = ((struct localNode_t *)p);
     struct localNode_t* r = ((struct localNode_t *)q);
-    //printf("Compare left: %d, right: %d\n", l->rank, r->rank);
     return (l->rank - r->rank);
 }
 
@@ -53,10 +52,6 @@ struct localTree_t* initLocalTree(node_t* node){
     localTree->pNodes++;
     node->children->parentLeaf = newChild;
   }
-
-  //printf("Size of local tree in %d is %d \n", node->name, localTree->size);
-
-
   return localTree;
 } ;
 
@@ -200,10 +195,10 @@ void addLT(localTree_t* a, node_t* b){
 void delLT(localTree_t* a, node_t* b){
   printf("\ndelLT: delete %d from %d local tree\n", b->name, a->root->name);
   //remove b and its path to the rank root
-  //printf("delTree: there are %d rank roots\n", a->pNodes);
   adjLTList_t* rankRoots = a->rankRoots;
   localNode_t* Rb = b->parentLeaf;
 
+  //find R_b
   if(a->pNodes == 1){
     Rb = rankRoots[0].node;
   }
@@ -212,8 +207,6 @@ void delLT(localTree_t* a, node_t* b){
       Rb = Rb->parent;
     }
   }
-  //find R_b
-  //printf("delLT: found rank root for %d: %d, rank %d\n", b->parentLeaf->name, Rb->name, Rb->rank);
 
   //remove rank root for b from the rank roots array
   int i = 0;
@@ -227,26 +220,12 @@ void delLT(localTree_t* a, node_t* b){
     }
     i++;
   }
-
-  //printf("delLT: rank roots %d\n", a->pNodes);
-  /*for(int j = 0 ; j < a->pNodes ; j++){
-    printf("%d rank %d\n", rankRoots[j].node->name, rankRoots[j].node->rank);
-  }*/
-
-  //printf("delTree: Calling updateRankRoots with Rb = %d rank %d\n", Rb->name, Rb->rank);
-
   updateRankRoots(a, Rb, b->parentLeaf);
-  //printf("delLT: ranksroots %d\n", a->pNodes);
-  /*for(int i = 0 ; i < a->pNodes ; i++){
-    printf("%d \n", rankRoots[i].node->name);
-  }*/
   updateLT(a);
 
 }
 
 void updateRankRoots(localTree_t* tree, localNode_t* node, localNode_t* rem){
-  printf("Calling updateRankRoots with Rb = %d rank %d\n", node->name, node->rank);
-
   if(!(node->left)&&!(node->right)){
     printf("updateRankRoots: Leaf reached, return\n");
     return;
@@ -266,8 +245,6 @@ void updateRankRoots(localTree_t* tree, localNode_t* node, localNode_t* rem){
     return;
   }
   else{
-    printf("%d %d\n", node->right->name, node->right->pNode);
-    printf("%d\n", node->right->parent->right->pNode);
     updateRankRoots(tree, node->left, rem);
     updateRankRoots(tree, node->right, rem);
   }
@@ -278,15 +255,11 @@ void updateRankRoots(localTree_t* tree, localNode_t* node, localNode_t* rem){
 
 void tree(localNode_t* a, int level, int keep){
   //update tree bitmap
-  unsigned int bit_position, setOrUnsetBit, ch;
   unsigned char bit_Map_array_index, shift_index;
 
-  bit_position = level;
-  setOrUnsetBit = keep;
-
-  bit_Map_array_index = (bit_position) / 8;
-  shift_index =  (bit_position) % 8;
-  if(setOrUnsetBit){
+  bit_Map_array_index = (level) / 8;
+  shift_index =  (level) % 8;
+  if(keep){
     a->tree[bit_Map_array_index] |= 1<<(7-shift_index);
   }
   else{
@@ -296,15 +269,11 @@ void tree(localNode_t* a, int level, int keep){
 
 void nonTree(localNode_t* a, int level, int keep){
   //update nontree bitmap
-  unsigned int bit_position, setOrUnsetBit, ch;
   unsigned char bit_Map_array_index, shift_index;
 
-  bit_position = level;
-  setOrUnsetBit = keep;
-
-  bit_Map_array_index = (bit_position) / 8;
-  shift_index =  (bit_position) % 8;
-  if(setOrUnsetBit){
+  bit_Map_array_index = (level) / 8;
+  shift_index =  (level) % 8;
+  if(keep){
     a->nonTree[bit_Map_array_index] |= 1<<(7-shift_index);
   }
   else{
@@ -312,7 +281,6 @@ void nonTree(localNode_t* a, int level, int keep){
   }
 } ;
 
-//TODO: implementation of bitwise OR for tree and non tree bitmaps
 void bitWiseOR(localNode_t* a, localNode_t* b, localNode_t* newNode){
   for(int i = 0; i < BITMAP_LEN; i++){
     newNode->tree[i] = (a->tree[i])|(b->tree[i]);
@@ -338,11 +306,7 @@ void nonbitWiseAND(localNode_t* a, localNode_t* b, localNode_t* newNode){
 //update anscestors for the tree or non tree bitmap
 //"node" is the index of the leaf in the structural tree
 void updateBitmaps(structTree_t* structTree, int node, int level){
-  //printf("\nupdateBitmaps: Updating the bitmaps from leaf to root for %d\n", node);
-
   node_t* currentRoot = structTree->list[node].nodes;
-
-  //printf("Copy tree bitmap from root of %d to its parent's (level %d) leaf\n", node, currentRoot->parent->level);
   localNode_t* prevLocalNode = currentRoot->localTree->root;
   localNode_t* updateNode = currentRoot->parentLeaf;
 
@@ -353,38 +317,23 @@ void updateBitmaps(structTree_t* structTree, int node, int level){
   //run through the structural forest starting from parent of leaf in structural tree
   while(currentRoot->level != level || currentRoot->level == level){
     printf("\nupdateBitmaps: Run through local node for %d level %d \n", currentRoot->name, currentRoot->level);
-
-
     //run through the local tree
-
     while(updateNode != updateNode->root){
-      //printf("test %d, root: %d\n", updateNode->parent->name, updateNode->root->name);
-      //printBitmap(updateNode->tree);
       localNode_t* b;
       if(updateNode->parent != updateNode->root){
-
-        //printf("updateBitmaps: The parent of current node has two children\n");
         if(updateNode->parent->left == updateNode){
-          //printf("updateBitmaps: the current local node is a left child, %d with rank %d\n", updateNode->name, updateNode->rank);
           b = updateNode->parent->right;
         }
         else{
-          //printf("updateBitmaps: the current local node is a right child, %d with rank %d\n", updateNode->name, updateNode->rank);
           b = updateNode->parent->left;
         }
         bitWiseOR(updateNode, b, updateNode->parent);
-        //printf("updateBitmaps: The tree bitmap for %d with rank %d is\n", updateNode->parent->name, updateNode->parent->rank);
-        //printBitmap(updateNode->parent->tree);
-
       }
       else{
-        //printf("reached the root\n");
-        //printf("updateBitmaps: The parent is the root and only has one child\n");
         updateNode->parent->tree[0] = updateNode->tree[0];
 
         updateNode->parent->tree[1] = updateNode->tree[1];
 
-        //printBitmap(updateNode->tree);
         if(currentRoot->level == level){
           return;
         }
@@ -393,7 +342,6 @@ void updateBitmaps(structTree_t* structTree, int node, int level){
       updateNode = updateNode->parent;
     }
 
-
     if(currentRoot->level == 0){
       break;
     }
@@ -401,28 +349,18 @@ void updateBitmaps(structTree_t* structTree, int node, int level){
       break;
     }
 
-
     prevLocalNode = currentRoot->localTree->root;
-    //printf("%d\n", currentRoot->level);
     updateNode = currentRoot->parentLeaf;
-    //printf("%d\n", updateNode->name);
-
     updateNode->tree[0] = prevLocalNode->tree[0];
     updateNode->tree[1] = prevLocalNode->tree[1];
 
     currentRoot = currentRoot->parent;
   }
-  //update the roots tree bitmap
-
-  //printf("updateBitmaps: bitmaps successfully updated\n");
 }
 
 void updateNonBitmaps(structTree_t* structTree, int node, int level){
-  //printf("\nupdateBitmaps: Updating the bitmaps from leaf to root for %d\n", node);
-
   node_t* currentRoot = structTree->list[node].nodes;
 
-  //printf("Copy tree bitmap from root of %d to its parent's (level %d) leaf\n", node, currentRoot->parent->level);
   localNode_t* prevLocalNode = currentRoot->localTree->root;
   localNode_t* updateNode = currentRoot->parentLeaf;
 
@@ -433,28 +371,18 @@ void updateNonBitmaps(structTree_t* structTree, int node, int level){
   //run through the structural forest starting from parent of leaf in structural tree
   while(currentRoot->level != level || currentRoot->level == level){
     printf("\nupdatenonBitmaps: Run through local node for %d level %d \n", currentRoot->name, currentRoot->level);
-    printf("%d\n", currentRoot->parent->level);
 
     //run through the local tree
-
     while(updateNode != updateNode->root){
-      printf("test\n");
-      //printBitmap(updateNode->tree);
       localNode_t* b;
       if(updateNode->parent != updateNode->root){
-
-        //printf("updateBitmaps: The parent of current node has two children\n");
         if(updateNode->parent->left == updateNode){
-          //printf("updateBitmaps: the current local node is a left child, %d with rank %d\n", updateNode->name, updateNode->rank);
           b = updateNode->parent->right;
         }
         else{
-          //printf("updateBitmaps: the current local node is a right child, %d with rank %d\n", updateNode->name, updateNode->rank);
           b = updateNode->parent->left;
         }
         bitWiseOR(updateNode, b, updateNode->parent);
-        //printf("updateBitmaps: The tree bitmap for %d with rank %d is\n", updateNode->parent->name, updateNode->parent->rank);
-        //printBitmap(updateNode->parent->tree);
       }
       else{
 
@@ -475,7 +403,6 @@ void updateNonBitmaps(structTree_t* structTree, int node, int level){
       updateNode = updateNode->parent;
     }
 
-
     if(currentRoot->level == 0){
       break;
     }
@@ -483,24 +410,20 @@ void updateNonBitmaps(structTree_t* structTree, int node, int level){
       break;
     }
 
-
     prevLocalNode = currentRoot->localTree->root;
-
     updateNode = currentRoot->parentLeaf;
-    printf("%d\n", updateNode->name);
-    printf("test1\n");
     updateNode->nonTree[0] = prevLocalNode->nonTree[0];
     updateNode->nonTree[1] = prevLocalNode->nonTree[1];
 
     currentRoot = currentRoot->parent;
-}
+  }
 }
 
 //Return 1 if there is an edge on level i
 int isEdge(unsigned char bitmap[], int level){
   unsigned char bit_Map_array_index, shift_index;
-  bit_Map_array_index = (level) / 8;
 
+  bit_Map_array_index = (level) / 8;
   shift_index =  (level) % 8;
 
   if(bitmap[bit_Map_array_index] & (1 << (7-shift_index))) {
@@ -516,10 +439,9 @@ int isEdge(unsigned char bitmap[], int level){
 //takes two local trees and deletes the rank path nodes
 //and but the local tree node pointer into one array
 void delRankPath(localTree_t* Tu, localTree_t* Tv){
-  int i;
-  printf("MergeLT: Deleting rank path nodes\n");
-  //printf("Size of tv %d\n", Tv->size);
-  for(i = 0 ; i < Tv->size ; i++){
+  printf("delRankPath: Deleting rank path nodes\n");
+
+  for(int i = 0 ; i < Tv->size ; i++){
     if(Tv->list[i].node->name != -1){
       Tu->list[Tu->size].node = Tv->list[i].node;
       Tu->list[Tu->size].node->root = Tu->root;
@@ -529,29 +451,20 @@ void delRankPath(localTree_t* Tu, localTree_t* Tv){
         Tu->pNodes++;
       }
     }
-
   }
-  //printf("MergeLT: Deleting rank path nodes\n");
 }
 
-//TODO: check if building correctly
 void buildRankPath(localTree_t* Tu, localNode_t* arr[]){
   printf("\nbuildRankPath: Building rank path\n");
   int i;
 
   if(Tu->pNodes == 1){
-    //printf("buildRankPath: there is only one rank path node %d with rank %d\n", arr[0]->name, arr[0]->rank);
-    //printf("buildRankPath: let it be the right child of the root: %d\n", Tu->list[0].node->name);
     arr[0]->parent = Tu->root;
     Tu->root->right = arr[0];
   }
   else{
-    //printf("%d\n", Tu->pNodes);
     //the amount of rank path nodes will be pNodes-1
     //since the last rpn's children both are rank roots
-    //printf("buildRankPath: there are more than one rank path root\n");
-    //printf("buildRankPath: give %d and %d a new parent, that is a rank path node\n", arr[0]->name, arr[1]->name);
-    //printf("test\n");
     localNode_t* RPnode = newLocalNode(-1);
     RPnode->root = Tu->root;
 
@@ -560,11 +473,8 @@ void buildRankPath(localTree_t* Tu, localNode_t* arr[]){
 
     RPnode->right = arr[0];
     RPnode->left = arr[1];
-    //printf("%d %d %d\n", RPnode->right->name, RPnode->left->name, RPnode->name);
     RPnode->parent = Tu->root;
     Tu->root->right = RPnode;
-
-    //TODO: update bitmaps for RPnode
 
     if(Tu->pNodes == 2){
       RPnode->parent = Tu->root;
@@ -574,14 +484,11 @@ void buildRankPath(localTree_t* Tu, localNode_t* arr[]){
       localNode_t* prevRPN = RPnode;
 
       for(int i = 2; i<(Tu->pNodes); i++){
-        //printf("buildRankPath: Inserting %d\n", arr[i]->name);
         localNode_t* newRPN = newLocalNode(-1);
         newRPN->right = prevRPN;
         newRPN->left = arr[i];
         prevRPN->parent = newRPN;
         arr[i]->parent = newRPN;
-        //Tu->list[(Tu->size)+(i-1)].node = newRPN;
-        //TODO: update bitmaps
 
         prevRPN = newRPN;
       }
@@ -593,10 +500,7 @@ void buildRankPath(localTree_t* Tu, localNode_t* arr[]){
 
 }
 
-// search for connection
-
 /* --------- PRINTS --------- */
-
 
 void printSiblings(node_t* parent){
   node_t* siblings = parent->children;
@@ -615,7 +519,6 @@ void printCluster(node_t* node){
   }
   printf("\n");
 }
-
 
 void printBitmap(unsigned char bitmap[]){
   unsigned int bit_position;

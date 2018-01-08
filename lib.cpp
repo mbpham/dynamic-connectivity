@@ -24,8 +24,7 @@ struct graph_t* makeGraph(int size){
   // allocate memory for adj list in array
   graph->graphArr = (struct adjList_t*) malloc(size * sizeof(struct adjList_t));
   // adding init adj list to the array
-  int i;
-  for(i = 0; i<size; i++){
+  for(int i = 0; i<size; i++){
     graph->graphArr[i].vertex = NULL;
     graph->graphArr[i].size = 0;
   }
@@ -139,13 +138,11 @@ void deleteEdge(graph_t* graph, int u, int v){
     vertex_t* headu = graph->graphArr[u].vertex;
     vertex_t* headv = graph->graphArr[v].vertex;
 
-    //deleting v from u adj list
-    //TODO: fix
     removedEdge_t* remu = (struct removedEdge_t*) malloc(sizeof(removedEdge_t));
     removedEdge_t* remv = (struct removedEdge_t*) malloc(sizeof(removedEdge_t));
 
+    //Search and delete connections in graph
     searchEdge(graph, remu, headu, u, v);
-    //deleting u from v adj list
     searchEdge(graph, remv, headv, v, u);
 
     printf("Deleting the level %d edge (%d,%d), nontreeEdge: %d\n", remu->level, u, v, remu->nontreeEdge);
@@ -154,8 +151,7 @@ void deleteEdge(graph_t* graph, int u, int v){
 
     /* CASES: TREE OR NON TREE EDGE REMOVED */
     if(remu->nontreeEdge){
-      //TODO: make updates for nontree bitmaps
-      //count non tree edges
+      //If there are still more non tree edges, it is not nessesary to update non-tree bitmaps
       if(!countNonTreeEdges(graph, u, remu->level)){
         printf("deleteEdge: There are no more non-tree edges for %d level %d. Update non-tree bitmap\n", u, remu->level);
         nonTree(graph->tree->list[u].nodes->localTree->root, remu->level,0);
@@ -166,19 +162,15 @@ void deleteEdge(graph_t* graph, int u, int v){
         nonTree(graph->tree->list[v].nodes->localTree->root, remv->level,0);
         updateNonBitmaps(graph->tree, v, 0);
       }
-
-
     }
     else{
-      //TODO: Implement delTree
+      //Make structural changes and find a replacement
       delTree(graph, u, v, remu->level);
     }
 
     //update the number of connections
     graph->graphArr[u].size--;
     graph->graphArr[v].size--;
-
-
   }
   else{
     printf("%d and %d are not connected. The job is done.\n", u, v);
@@ -214,15 +206,12 @@ void searchEdge(graph_t* graph, removedEdge_t* rem, vertex_t* vertex, int u, int
 
 // checks if two vertices are directly connected
 int isConnected(graph_t* graph, int u, int v){
-  int i;
   int minSize = min(graph->graphArr[u].size, graph->graphArr[v].size);
 
   vertex_t* checkU = graph->graphArr[u].vertex;
   vertex_t* checkV = graph->graphArr[v].vertex;
-  printf("isConnected: size of %d is %d\n", u, graph->graphArr[u].size);
-  printf("isConnected: size of %d is %d\n", v, graph->graphArr[v].size);
 
-  for(i = 0; i<minSize; i++){
+  for(int i = 0; i<minSize; i++){
     if(checkU->name == v || checkV->name == u){
       return 1;
     }
@@ -242,7 +231,6 @@ int countNonTreeEdges(graph_t* graph, int vertexIndex, int level){
   }
   return 0;
 }
-
 
 int treeConnected(structTree_t* tree, int u, int v){
   printf("\n----------------------------------------------------- \n");

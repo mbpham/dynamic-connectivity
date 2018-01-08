@@ -77,7 +77,6 @@ struct node_t {
 
 // adj list for nodes
 struct adjTreeList_t {
-  int                   size        ; //Size of cluster
   struct node_t*        nodes       ; //Pointer to the node in structural tree
 
 } ;
@@ -147,7 +146,6 @@ void addEdge(graph_t graph, int u, int v);
 void deleteEdge(graph_t* graph, vertex_t v, vertex_t u);
 
 // searches for the connection (u,v) and remove connection
-// TODO: split the function such that we have a search function and a remove function
 void searchEdge(graph_t* graph, removedEdge_t* rem, vertex_t* vertex, int u, int v);
 
 // check if two vertices are connected
@@ -155,90 +153,62 @@ int isConnected(graph_t* graph, int u, int v);
 int countNonTreeEdges(graph_t* graph, int vertexIndex, int level);
 
 /* --------- STRUCTURAL TREE ---------*/
-// makes a new node for the structural tree and initializes the values
-// also points to a vertex in the leaves
-struct node_t* newNode(int name);
-
-void leafToRoot(node_t* u);
-
-int findUpdateLevel(structTree_t* structTree, int u, int v);
-
-void updateRoot(node_t* newRoot, node_t* delRoot);
-
-// bulding structural tree, initiated state
+//initial state
 struct structTree_t* initStructTree(graph_t* graph);
+struct node_t* newNode(int name);
+struct tv_t* initTv();
 
-//update level and root for structural tree
-//void recurseLevel(node_t* root, node_t* currentRoot, int level);
-
-// merging two nodes a and b in a in the structural tree
-void mergeNodes(graph_t* g,node_t* a, node_t* b);
-
-// called from addEdge. Updates.
+//insert
 void addTree(graph_t* graph, int u, int v);
+void mergeNodes(node_t* a, node_t* b); // merging two nodes a and b in a in the structural tree
 
+//delete
 void delTree(graph_t* graph, int u, int v, int level);
+int search(adjTreeList_t* cluster, int elem, int n);
 
-// replace
-void replace(graph_t graph);
-
-int isConnected(graph_t* graph, int u, int v);
-
-int search(adjTreeList_t* cluster, int elem);
-
-void updateSiblings(graph_t* graph, node_t* p, node_t* tv, int level);
-void updateClusters(adjTreeList_t* pCluster, adjTreeList_t* tvCluster, int removeElem);
-
-
-void findReplacement(graph_t* graph, int u, int v, node_t* tvNode, node_t* twNode, int level, replacement_t* rep);
-
-void updateNonTree(int u, int v, graph_t* graph);
-//int graphConnected(graph_t* graph, int u, int v);
-
+//size procedure
 void Size(tv_t* tv, node_t* x, node_t* y, int level);
 void structSearchDown(tv_t* tv, node_t* yi1, int level);
 void localSearchDown(tv_t* tv, localNode_t* currentLocal, int level);
 int visited(int vis1[], int vis2[], int seek1, int seek2, int size);
-struct tv_t* initTv();
-struct node_t* findLevelnode(node_t* node, int level);
+
+//searching for a replacement
+void findReplacement(graph_t* graph, int u, int v, node_t* tvNode, node_t* twNode, int level, replacement_t* rep);
 void checkNonTreeEdges(node_t* tvNode, replacement_t* rep, int level);
 void splitCluster(node_t* tv, node_t* parent);
 void splitNodes(node_t* tv, node_t* parent);
 void removeSibling(node_t* tv, node_t* parent);
+
+//other functions
+int findUpdateLevel(structTree_t* structTree, int u, int v);
+void updateNonTree(int u, int v, graph_t* graph);
+struct node_t* findLevelnode(node_t* node, int level);
+
 /* --------- LOCAL TREE ---------*/
-
-void printBitmap(unsigned char bitmap[]);
-
-void byte_as_bits(char bitmap);
-
-struct node_t* findMinLevelNode(graph_t* graph, int u, int v);
-
-void addLT(localTree_t* a, node_t* b);
-void delLT(localTree_t* a, node_t* b);
-
-// initializes local tree
+//initial states
 struct localTree_t* initLocalTree(node_t* node);
-
 struct localNode_t* newLocalNode(int name);
+
+//adding nodes
+void addLT(localTree_t* a, node_t* b);
+
+
+//removing nodes
+void delLT(localTree_t* a, node_t* b);
+void updateRankRoots(localTree_t* tree, localNode_t* node, localNode_t* rem);
 
 // merging nodes in LT
 void mergeLT(localTree_t* Tu, localTree_t* Tv);
-
-//bitmap updates
-void tree(localNode_t* a, int level, int keep);
-
-void nonTree(localNode_t* a, int level, int keep);
-
 void updateLT(localTree_t* tree);
-
 void pairNodes(localTree_t* Tu, localNode_t* arr[]);
-
 void delRankPath(localTree_t* Tu, localTree_t* Tv);
 void buildRankPath(localTree_t* Tu, localNode_t* arr[]);
-void updateRankRoots(localTree_t* tree, localNode_t* node, localNode_t* rem);
 
 //bitmap updates
 void updateNonBitmaps(structTree_t* structTree, int node, int level);
 void updateBitmaps(structTree_t* structTree, int node, int level);
 void nonbitWiseAND(localNode_t* a, localNode_t* b, localNode_t* newNode);
 void nonbitWiseOR(localNode_t* a, localNode_t* b, localNode_t* newNode);
+void tree(localNode_t* a, int level, int keep);
+void nonTree(localNode_t* a, int level, int keep);
+void byte_as_bits(char bitmap);
