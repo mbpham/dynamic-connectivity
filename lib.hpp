@@ -172,7 +172,7 @@ struct structTree_t* initStructTree(graph_t* graph);
 //void recurseLevel(node_t* root, node_t* currentRoot, int level);
 
 // merging two nodes a and b in a in the structural tree
-void mergeNodes(node_t* a, node_t* b);
+void mergeNodes(graph_t* g,node_t* a, node_t* b);
 
 // called from addEdge. Updates.
 void addTree(graph_t* graph, int u, int v);

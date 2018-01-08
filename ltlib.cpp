@@ -433,14 +433,16 @@ void updateNonBitmaps(structTree_t* structTree, int node, int level){
   //run through the structural forest starting from parent of leaf in structural tree
   while(currentRoot->level != level || currentRoot->level == level){
     printf("\nupdatenonBitmaps: Run through local node for %d level %d \n", currentRoot->name, currentRoot->level);
-
+    printf("%d\n", currentRoot->parent->level);
 
     //run through the local tree
 
     while(updateNode != updateNode->root){
+      printf("test\n");
       //printBitmap(updateNode->tree);
       localNode_t* b;
       if(updateNode->parent != updateNode->root){
+
         //printf("updateBitmaps: The parent of current node has two children\n");
         if(updateNode->parent->left == updateNode){
           //printf("updateBitmaps: the current local node is a left child, %d with rank %d\n", updateNode->name, updateNode->rank);
@@ -455,6 +457,7 @@ void updateNonBitmaps(structTree_t* structTree, int node, int level){
         //printBitmap(updateNode->parent->tree);
       }
       else{
+
         //printf("reached the root\n");
         //printf("updateBitmaps: The parent is the root and only has one child\n");
         updateNode->parent->nonTree[0] = updateNode->nonTree[0];
@@ -462,10 +465,13 @@ void updateNonBitmaps(structTree_t* structTree, int node, int level){
         updateNode->parent->nonTree[1] = updateNode->nonTree[1];
 
         if(currentRoot->level == level){
+
           return;
         }
+
         break;
       }
+
       updateNode = updateNode->parent;
     }
 
@@ -481,8 +487,8 @@ void updateNonBitmaps(structTree_t* structTree, int node, int level){
     prevLocalNode = currentRoot->localTree->root;
 
     updateNode = currentRoot->parentLeaf;
-
-
+    printf("%d\n", updateNode->name);
+    printf("test1\n");
     updateNode->nonTree[0] = prevLocalNode->nonTree[0];
     updateNode->nonTree[1] = prevLocalNode->nonTree[1];
 
