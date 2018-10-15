@@ -7,6 +7,7 @@ using namespace std;
 struct removedEdge_t {
   int level;
   int nontreeEdge;
+  int hej;
 } ;
 
 struct replacement_t{
